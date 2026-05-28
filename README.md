@@ -72,31 +72,25 @@ project_root/
 
 The `reflect.md` file in this repository can be used as a skill in both Claude Code and OpenCode.
 
-**For Claude Code:** Copy or link it to your project's `.claude/skills/reflect/SKILL.md`:
+**Setup the reflect skill:**
 
 ```bash
+# For Claude Code
 mkdir -p .claude/skills/reflect
 ln ~/path/to/agents-template/reflect.md .claude/skills/reflect/SKILL.md
-```
 
-Then invoke it with `/reflect` in Claude Code.
-
-**For OpenCode:** Copy or link it to your project's `.opencode/skills/reflect/SKILL.md`:
-
-```bash
+# For OpenCode
 mkdir -p .opencode/skills/reflect
 ln ~/path/to/agents-template/reflect.md .opencode/skills/reflect/SKILL.md
 ```
 
-Then invoke it using the `skill` tool.
+**Usage:**
+- **Claude Code:** Invoke with `/reflect`
+- **OpenCode:** Use the `skill` tool to invoke the reflect skill
 
 The agent will review the conversation, identify learned information, and update the knowledge base accordingly.
 
-## Claude Code Setup
-
-To use this knowledge system with Claude Code:
-
-### 1. Project Structure
+## Agent Setup
 
 Create the following in your project root:
 
@@ -113,48 +107,18 @@ touch knowledge/_basic.md
 touch knowledge.local/_basic.md
 
 # Setup the reflect skill (optional)
-mkdir -p .claude/skills/reflect
+mkdir -p .claude/skills/reflect    # or .opencode/skills/reflect
 ln ~/path/to/agents-template/reflect.md .claude/skills/reflect/SKILL.md
 ```
 
-### 2. How It Works
+**How it works:**
 
-- Claude Code automatically looks for `.claude/skills/` in your project
-- The `AGENTS.md` in project root provides knowledge base references
-- Agents read `knowledge/_basic.md` and `knowledge.local/_basic.md` at first start
-- Use `/reflect` to capture session learnings into the knowledge base
+| Agent | Skill Invocation | Auto-discovery |
+|-------|------------------|----------------|
+| Claude Code | `/reflect` | `.claude/skills/` |
+| OpenCode | `skill` tool | `.opencode/skills/` |
 
-## OpenCode Setup
-
-To use this knowledge system with OpenCode:
-
-### 1. Project Structure
-
-Create the following in your project root:
-
-```bash
-# Create hard links to the template files
-ln ~/path/to/agents-template/AGENTS.md ./AGENTS.md
-ln ~/path/to/agents-template/KNOWLEDGE_ORG.md ./KNOWLEDGE_ORG.md
-
-# Create knowledge directories
-mkdir -p knowledge knowledge.local
-
-# Initialize required _basic.md files
-touch knowledge/_basic.md
-touch knowledge.local/_basic.md
-
-# Setup the reflect skill
-mkdir -p .opencode/skills/reflect
-ln ~/path/to/agents-template/reflect.md .opencode/skills/reflect/SKILL.md
-```
-
-### 2. How It Works
-
-- OpenCode automatically looks for `.opencode/skills/` in your project
-- The `AGENTS.md` in project root provides knowledge base references
-- Agents read `knowledge/_basic.md` and `knowledge.local/_basic.md` at first start
-- Use the `skill` tool to invoke the reflect skill
+Both agents automatically look for skills in their respective directories and read `knowledge/_basic.md` and `knowledge.local/_basic.md` at first start.
 
 ## Workflow Summary
 
