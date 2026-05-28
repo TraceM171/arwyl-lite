@@ -31,6 +31,10 @@ For each piece of learned information:
 3. Append new information to the appropriate file
 4. If information is time-sensitive or experimental, mark it clearly
 
+### 3. Commit and Push (if applicable)
+
+If the knowledge directory is a separate repo (not in the project repo), ask the user whether they want to commit and push the changes before finishing.
+
 ### 4. Report Summary
 
 After updating knowledge, provide a brief summary:
