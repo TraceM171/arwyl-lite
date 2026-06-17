@@ -23,6 +23,12 @@ Beyond the mandatory set, consult the rest of the knowledge tree **before acting
 
 Do not wait to be asked. If a relevant file exists, open it. The cost of a quick read is lower than the cost of acting on a stale assumption.
 
+## Memory discipline — knowledge system only
+
+**Never use external memory functions to remember things.** This includes the Claude Code memory tool, auto-managed `MEMORY.md` sidecars, or any other tool-level persistence layer. They fragment context, drift from the source of truth, and bypass the org rules.
+
+The knowledge tree (`knowledge/**`, governed by `KNOWLEDGE_ORG.md`) is the single source of truth. Anything worth remembering across sessions — facts, decisions, preferences, conventions, environment quirks, deployment state — goes into the appropriate knowledge file using the five kinds, the per-X convention, and the domain structure. Do not write a sidecar memory file, do not call a memory tool, do not duplicate facts into a tool-managed store. If a memory function offers to record something, write it into the knowledge tree instead and ignore the offer.
+
 ## Editing knowledge — `KNOWLEDGE_ORG.md` is mandatory reading first
 
 **Read `KNOWLEDGE_ORG.md` in full before any edit to the knowledge tree.** This is mandatory, not optional. Triggers (any of these means you must read it first):
