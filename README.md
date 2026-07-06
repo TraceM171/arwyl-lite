@@ -69,6 +69,24 @@ ln ~/agents-template/reflect.md .opencode/skills/reflect/SKILL.md
 
 **Use:** Say "reflect" or use the skill tool to invoke it.
 
+## Status Line
+
+`statusline.py` — Claude Code status line script (context %, model, rate-limit countdowns).
+
+**Setup:**
+```bash
+ln -s ~/agents-template/statusline.py ~/.claude/statusline.py
+```
+
+Then in `~/.claude/settings.json`:
+```json
+"statusLine": {
+  "type": "command",
+  "command": "python3 /home/trace/.claude/statusline.py",
+  "refreshInterval": 10
+}
+```
+
 ## Handoff Skill
 
 Generate a copy-pasteable handoff prompt summarizing the current session for the next one.
