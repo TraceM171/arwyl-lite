@@ -7,7 +7,7 @@ except Exception:
     print("claude")
     sys.exit(0)
 
-G, Y, R, RESET = "\033[92m", "\033[93m", "\033[91m", "\033[0m"
+G, Y, R, C, RESET = "\033[92m", "\033[93m", "\033[91m", "\033[96m", "\033[0m"
 DIM = "\033[2m"
 SEP = f"{DIM} · {RESET}"
 
@@ -61,7 +61,7 @@ def fmt_reset(rl):
 rate = data.get("rate_limits", {})
 rl_parts = [s for s in [fmt_reset(rate.get("five_hour", {})), fmt_reset(rate.get("seven_day", {}))] if s]
 
-# Git branch — dot color reflects real state: clean (green) vs dirty (yellow)
+# Git branch — dot color reflects real state: clean (green), uncommitted (yellow), unpushed (cyan)
 # Branch stats = uncommitted diff vs HEAD (staged + unstaged)
 def git_status():
     cwd = data.get("cwd") or data.get("workspace", {}).get("current_dir")
@@ -82,15 +82,21 @@ def git_status():
         out = diff.stdout.strip()
         ins = int(m.group(1)) if (m := re.search(r"(\d+) insertion", out)) else 0
         dele = int(m.group(1)) if (m := re.search(r"(\d+) deletion", out)) else 0
-        return name, ins, dele
+        ahead = subprocess.run(
+            ["git", "-C", cwd, "rev-list", "--count", "@{u}.."],
+            capture_output=True, text=True, timeout=2,
+        )
+        unpushed = int(ahead.stdout.strip()) if ahead.returncode == 0 and ahead.stdout.strip().isdigit() else 0
+        return name, ins, dele, unpushed
     except Exception:
         return None
 
 git_info = git_status()
 git_str = None
 if git_info:
-    branch, b_added, b_removed = git_info
-    dot = Y if (b_added or b_removed) else G
+    branch, b_added, b_removed, unpushed = git_info
+    dirty = bool(b_added or b_removed)
+    dot = Y if dirty else C if unpushed else G
     branch_stats = f"{DIM}branch {RESET}{DIM}+{b_added} -{b_removed}{RESET}"
     git_str = f"{dot}●{RESET} {branch}{SEP}{branch_stats}"
 

@@ -39,6 +39,7 @@ Read every file and check it against each rule, not just the ones that seem obvi
 - **`.local/` scoping** — for each file in `.local/`, apply the test: would a different owner of this project need it? If yes, it's misplaced and belongs in the shared tree.
 - **Dated files** — confirm closed audits/incidents haven't been edited in place; corrections should be new dated files, not rewrites of the original.
 - **Stale content** — status claims that no longer match reality, dead links, references to removed files or domains.
+- **Inconsistencies and contradictions** — facts that conflict across files (two files claiming different values/states for the same thing, rationale that contradicts a decision recorded elsewhere). If the existing knowledge resolves it, fix the stale side. A quick, targeted factcheck against the actual code/config/resource is also fair game when it's fast and clean (e.g. checking one file, running one command) — never go down a rabbit hole in the codebase over this; knowledge review is still the main focus. If it can't be resolved quickly, do not guess — add it to the findings list as a question for the user in step 7. Resolving from evidence is preferred; asking the user is preferred over inventing or assuming.
 
 Keep a running list of findings: file, rule violated, proposed fix. This list is the basis for step 4.
 
