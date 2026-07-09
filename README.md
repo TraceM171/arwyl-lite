@@ -1,4 +1,4 @@
-# Agents Knowledge Template
+# Arwyl Lite
 
 Structured knowledge for agent-assisted development. Agents read this to understand your project, preferences, and conventions.
 
@@ -10,8 +10,8 @@ Per-tool integrations live in their own top-level folder (`claude_code/` today; 
 
 ```bash
 claude
-/plugin marketplace add TraceM171/agents
-/plugin install agents-knowledge@agents-marketplace
+/plugin marketplace add TraceM171/arwyl-lite
+/plugin install arwyl-lite@arwyl-lite-marketplace
 ```
 
 (Testing a local clone before pushing? Use the local path instead: `/plugin marketplace add ~/agents-template`.)

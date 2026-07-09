@@ -1,12 +1,12 @@
 {
-  "name": "agents-marketplace",
+  "name": "arwyl-lite-marketplace",
   "description": "Personal knowledge-tree conventions and skills for Claude Code.",
   "owner": {
     "name": "TraceM171"
   },
   "plugins": [
     {
-      "name": "agents-knowledge",
+      "name": "arwyl-lite",
       "source": "./claude_code",
       "description": "Knowledge-tree conventions, reflect/curate/handoff skills, and a status line for Claude Code."
     }
