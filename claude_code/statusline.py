@@ -107,9 +107,41 @@ if git_info:
     branch_stats = f"{DIM}branch {RESET}\033[1m+{b_added} -{b_removed}{RESET}"
     git_str = f"{dot}●{RESET} \033[1m{branch}{RESET}{SEP}{branch_stats}"
 
-# Lines added/removed this session (whole session, not knowledge-scoped)
-cost = data.get("cost", {})
-added, removed = cost.get("total_lines_added"), cost.get("total_lines_removed")
+# Lines added/removed this session (whole session, not knowledge-scoped). Computed from the
+# transcript's per-edit patches rather than data["cost"] — the latter only tracks the current
+# process and resets to 0 on session resume, even though the transcript (and its line diffs)
+# carries over since resume appends to the same transcript file rather than starting a new one.
+def session_line_diff():
+    transcript_path = data.get("transcript_path")
+    if not transcript_path:
+        return None
+    added = removed = 0
+    try:
+        with open(transcript_path) as f:
+            for line in f:
+                try:
+                    entry = json.loads(line)
+                except Exception:
+                    continue
+                tur = entry.get("toolUseResult")
+                if not isinstance(tur, dict):
+                    continue
+                for hunk in tur.get("structuredPatch") or []:
+                    for l in hunk.get("lines") or []:
+                        if l.startswith("+") and not l.startswith("+++"):
+                            added += 1
+                        elif l.startswith("-") and not l.startswith("---"):
+                            removed += 1
+    except OSError:
+        return None
+    return added, removed
+
+diff = session_line_diff()
+if diff is not None:
+    added, removed = diff
+else:
+    cost = data.get("cost", {})
+    added, removed = cost.get("total_lines_added"), cost.get("total_lines_removed")
 lines_str = None
 if added is not None or removed is not None:
     lines_str = italic(f"{DIM}session {RESET}\033[1m+{added or 0} -{removed or 0}{RESET}")
