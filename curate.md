@@ -58,11 +58,15 @@ Per `KNOWLEDGE_ORG.md`'s "Restructuring" section — if the findings are a handf
 - Do not fabricate content to fill gaps — if a file's classification is genuinely unclear, ask the user rather than guessing.
 - Leave closed dated audits untouched; if one contains a fact that needs correcting, open a new dated file per the append-only rule instead of editing the original.
 
-### 6. Commit and Push (if applicable)
+### 6. Stamp the Curate Marker
 
-Same as reflect: if the knowledge directory is a separate repo, ask the user whether to commit and push the changes before finishing. If it's part of the project repo, follow the project's normal commit conventions and only commit if asked.
+Write today's date (`YYYY-MM-DD`), and nothing else, to `knowledge/_curated.md` (create it if missing). This is a reserved marker file per `KNOWLEDGE_ORG.md` — tooling (e.g. the status line) reads it to gauge drift since the last curate pass. Do this even on a run that found nothing to fix; a clean audit still resets the drift clock.
 
-### 7. Report Summary
+### 7. Commit and Push (if applicable)
+
+Same as reflect: if the knowledge directory is a separate repo, ask the user whether to commit and push the changes before finishing. If it's part of the project repo, follow the project's normal commit conventions and only commit if asked. Include the `_curated.md` marker update in this commit.
+
+### 8. Report Summary
 
 Report:
 - What was audited (file/directory count)

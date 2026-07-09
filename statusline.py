@@ -107,7 +107,10 @@ lines_str = None
 if added is not None or removed is not None:
     lines_str = f"{DIM}session {RESET}\033[1m+{added or 0} -{removed or 0}{RESET}"
 
-# Knowledge-tree activity this session — knowledge/**.md files read vs edited, as % of the tree
+# Knowledge-tree activity this session — knowledge/**.md files read vs edited, as % of the tree.
+# Also scans for reflect-nudge signals: non-knowledge edits (code changed, not captured) and
+# overall tool-call volume/session duration (investigation happened, e.g. an SSH debugging session
+# with no file edits at all) — either is a proxy for "there's probably something worth reflecting".
 def knowledge_activity():
     transcript_path = data.get("transcript_path")
     project_dir = data.get("workspace", {}).get("project_dir") or data.get("cwd")
@@ -118,7 +121,9 @@ def knowledge_activity():
         return None
     knowledge_root = knowledge_dir + os.sep
     total_files = sum(len(files) for _, _, files in os.walk(knowledge_dir))
-    read_files, edited_files = set(), set()
+    read_files, edited_files, non_kn_edited_files = set(), set(), set()
+    tool_calls = 0
+    reflected = False
     try:
         with open(transcript_path) as f:
             for line in f:
@@ -131,28 +136,78 @@ def knowledge_activity():
                 for block in entry.get("message", {}).get("content") or []:
                     if not isinstance(block, dict) or block.get("type") != "tool_use":
                         continue
+                    tool_calls += 1
                     name = block.get("name")
                     inp = block.get("input") or {}
+                    if name == "Skill" and inp.get("skill") == "reflect":
+                        reflected = True
                     fp = inp.get("file_path") or inp.get("notebook_path")
-                    if not fp or not fp.startswith(knowledge_root):
+                    if not fp:
                         continue
-                    if name == "Read":
-                        read_files.add(fp)
+                    if fp.startswith(knowledge_root):
+                        if name == "Read":
+                            read_files.add(fp)
+                        elif name in ("Edit", "Write", "NotebookEdit"):
+                            edited_files.add(fp)
                     elif name in ("Edit", "Write", "NotebookEdit"):
-                        edited_files.add(fp)
+                        non_kn_edited_files.add(fp)
     except OSError:
         return None
-    return len(read_files), len(edited_files), total_files
+    return knowledge_dir, len(read_files), len(edited_files), total_files, len(non_kn_edited_files), tool_calls, reflected
+
+# Curate nudge — how much of the knowledge tree has changed since the last curate pass.
+# `knowledge/_curated.md` (reserved marker, see KNOWLEDGE_ORG.md) holds the date curate last
+# ran; count distinct knowledge files touched by commits since then. No marker yet (never
+# curated) falls back to total tree size, gated so a small fresh tree doesn't nag.
+def curate_signal(cwd, knowledge_dir, total_files):
+    marker_path = os.path.join(knowledge_dir, "_curated.md")
+    since_date = None
+    if os.path.isfile(marker_path):
+        try:
+            content = open(marker_path).read().strip()
+        except OSError:
+            content = ""
+        if re.match(r"^\d{4}-\d{2}-\d{2}$", content):
+            since_date = content
+    if not since_date:
+        return total_files, total_files >= 15
+    try:
+        out = subprocess.run(
+            ["git", "-C", cwd, "log", f"--since={since_date}", "--name-only", "--pretty=format:", "--", knowledge_dir],
+            capture_output=True, text=True, timeout=2,
+        )
+    except Exception:
+        return None
+    if out.returncode != 0:
+        return None
+    changed = len({l for l in out.stdout.splitlines() if l.strip()})
+    return changed, changed >= 10
 
 kn = knowledge_activity()
 kn_str = None
 if kn is not None:
-    n_read, n_edit, total_files = kn
+    knowledge_dir, n_read, n_edit, total_files, n_non_kn_edit, tool_calls, reflected = kn
     read_pct = (n_read / total_files * 100) if total_files else 0
     edit_pct = (n_edit / total_files * 100) if total_files else 0
     read_part = f"\033[1m{n_read}{RESET}{DIM} read ({RESET}\033[1m{read_pct:.0f}%{RESET}{DIM}){RESET}"
     edit_part = f"\033[1m{n_edit}{RESET}{DIM} edited ({RESET}\033[1m{edit_pct:.0f}%{RESET}{DIM}){RESET}"
     kn_str = f"{DIM}knowledge:{RESET} " + SEP.join([read_part, edit_part])
+
+    # Reflect nudge — code changed (>=3 non-knowledge files) or a long investigation
+    # (>=25 tool calls over >=15min) happened, and reflect hasn't run yet this session.
+    duration_min = (data.get("cost", {}).get("total_duration_ms") or 0) / 60000
+    edits_trigger = n_non_kn_edit >= 3
+    activity_trigger = tool_calls >= 25 and duration_min >= 15
+    if not reflected and (edits_trigger or activity_trigger):
+        reasons = "+".join(r for r, on in (("edits", edits_trigger), ("activity", activity_trigger)) if on)
+        kn_str += f"{SEP}{Y}●{RESET} {DIM}reflect? ({reasons}){RESET}"
+
+    cwd = data.get("cwd") or data.get("workspace", {}).get("current_dir")
+    cur = curate_signal(cwd, knowledge_dir, total_files) if cwd else None
+    if cur is not None:
+        changed_count, curate_trigger = cur
+        if curate_trigger:
+            kn_str += f"{SEP}{Y}●{RESET} {DIM}curate? ({changed_count} files){RESET}"
 
 git_line_parts = [p for p in [git_str, lines_str] if p]
 status_parts = [ctx_str, model_str] + rl_parts
