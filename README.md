@@ -122,14 +122,20 @@ ln ~/agents-template/claude_code/KNOWLEDGE_ORG.md .opencode/skills/knowledge-org
 
 ## Status Line
 
-`claude_code/statusline.py` — Claude Code status line script (knowledge-tree activity with reflect/curate nudges, git branch/session diffs, context %, model, rate-limit countdowns). Not installable via the plugin — `statusLine` is a user-level setting only.
+`claude_code/statusline.py` — Claude Code status line script (knowledge-tree activity with reflect/curate nudges, git branch/session diffs, context %, model, rate-limit countdowns). Not installable via the plugin — `statusLine` is a user-level setting only, so it needs a manual symlink either way.
 
-**Setup:**
+**If you have a manual clone** (Option B, or developing/testing this repo):
 ```bash
 ln -s ~/agents-template/claude_code/statusline.py ~/.claude/statusline.py
 ```
 
-Then in `~/.claude/settings.json`:
+**If you installed via the plugin marketplace** (Option A) and don't want a separate clone just for this: Claude Code keeps a live git checkout of the marketplace at `~/.claude/plugins/marketplaces/<marketplace-name>/` (`arwyl-lite-marketplace` if you used the default name from Option A), refreshed whenever you run `/plugin marketplace update`:
+```bash
+ln -s ~/.claude/plugins/marketplaces/arwyl-lite-marketplace/claude_code/statusline.py ~/.claude/statusline.py
+```
+That path is the marketplace's internal working copy, not a documented/guaranteed Claude Code location — it works today but could move in a future release. Fall back to a manual clone if it ever breaks.
+
+Then in `~/.claude/settings.json` (either way):
 ```json
 "statusLine": {
   "type": "command",
