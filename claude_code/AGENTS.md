@@ -23,6 +23,10 @@ Beyond the mandatory set, consult the rest of the knowledge tree **before acting
 
 Do not wait to be asked. If a relevant file exists, open it. The cost of a quick read is lower than the cost of acting on a stale assumption.
 
+## Capture as you go
+
+Update the knowledge tree inline, while working — the moment a fact is confirmed, a decision is made, or a stale value is caught, write it into the right file immediately (per `KNOWLEDGE_ORG.md`). Do not batch learnings up for a later `reflect` pass by default. `reflect` exists as an end-of-session catch-all for whatever slipped through, not as the primary capture mechanism — a `reflect` run that finds little or nothing to add because everything was already written down live is the expected outcome, not a sign it was skipped.
+
 ## Memory discipline — knowledge system only
 
 **Never use external memory functions to remember things.** This includes the Claude Code memory tool, auto-managed `MEMORY.md` sidecars, or any other tool-level persistence layer. They fragment context, drift from the source of truth, and bypass the org rules.

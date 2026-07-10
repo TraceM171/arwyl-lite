@@ -39,15 +39,17 @@ Read every file and check it against each rule, not just the ones that seem obvi
 - **`.local/` scoping** — for each file in `.local/`, apply the test: would a different owner of this project need it? If yes, it's misplaced and belongs in the shared tree.
 - **Dated files** — confirm closed audits/incidents haven't been edited in place; corrections should be new dated files, not rewrites of the original.
 - **Stale content** — status claims that no longer match reality, dead links, references to removed files or domains.
-- **Inconsistencies and contradictions** — facts that conflict across files (two files claiming different values/states for the same thing, rationale that contradicts a decision recorded elsewhere). If the existing knowledge resolves it, fix the stale side. A quick, targeted factcheck against the actual code/config/resource is also fair game when it's fast and clean (e.g. checking one file, running one command) — never go down a rabbit hole in the codebase over this; knowledge review is still the main focus. If it can't be resolved quickly, do not guess — add it to the findings list as a question for the user in step 7. Resolving from evidence is preferred; asking the user is preferred over inventing or assuming.
+- **Inconsistencies and contradictions** — facts that conflict across files (two files claiming different values/states for the same thing, rationale that contradicts a decision recorded elsewhere). If the existing knowledge resolves it, fix the stale side. A factcheck against the actual code/config/resource is capped at a couple of quick, targeted reads (a file or two, a command or two) per finding — not a live-system audit: no SSH sessions, no querying running services, no sweeping multiple compose files or scripts to build a picture. If confirming a suspected mismatch would take more than that, skip the check and go straight to marking it for review instead — knowledge review is the main focus, not a codebase investigation. Curate never edits code or anything outside the knowledge tree, and never silently rewrites knowledge to match what it finds in code — any mismatch a factcheck turns up between knowledge and the code gets marked in the findings list for review in step 8, never resolved in place. If a knowledge-to-knowledge contradiction can't be resolved from existing knowledge, that's a business-level fact question — add it to the findings list as a question for the user in step 8.
 
 Keep a running list of findings: file, rule violated, proposed fix. This list is the basis for step 4.
 
 ### 4. Decide: patch vs. restructure
 
-Per `KNOWLEDGE_ORG.md`'s "Restructuring" section — if the findings are a handful of local fixes (rename a file, split one mega-file, delete a duplicate), just do them. If the findings show the domain taxonomy itself no longer fits (multiple junk-drawer domains, systemic misplacement, kinds mixed everywhere), propose a restructuring.
+Per `KNOWLEDGE_ORG.md`'s "Restructuring" section — if the findings are a handful of local fixes (rename a file, split one mega-file, delete a duplicate), just do them. If the findings show the domain taxonomy itself no longer fits (multiple junk-drawer domains, systemic misplacement, kinds mixed everywhere), plan a restructuring.
 
-**Before executing a restructuring that moves, merges, or deletes more than a few files, summarize the plan and confirm with the user.** This is a hard-to-reverse action across potentially many files — cheap to preview, expensive to redo. Small, obviously-correct fixes (fixing one filename, adding a missing `_basic.md`) don't need this pause.
+Deciding *what* to restructure — which files move, merge, split, or get deleted — is an organization-of-knowledge call, and that decision is curate's to make on its own judgment; don't ask the user how to organize it.
+
+**Before executing** a restructuring that moves, merges, or deletes more than a few files, summarize the plan and pause for the user's go-ahead. This isn't an organizational question (curate already decided the plan) — it's a safety checkpoint on a hard-to-reverse batch action across potentially many files: cheap to preview, expensive to redo. Small, obviously-correct fixes (fixing one filename, adding a missing `_basic.md`) don't need this pause.
 
 ### 5. Execute
 
@@ -55,7 +57,7 @@ Per `KNOWLEDGE_ORG.md`'s "Restructuring" section — if the findings are a handf
 - Split mega-files along the seams identified in step 3; update the domain's `_basic.md` to list the new files.
 - Merge/deduplicate: keep the fact in its canonical file, replace the others with a link.
 - Create any missing `_basic.md` files.
-- Do not fabricate content to fill gaps — if a file's classification is genuinely unclear, ask the user rather than guessing.
+- Do not fabricate content to fill gaps. Classification is an organization-of-knowledge call — decide it directly from `KNOWLEDGE_ORG.md` and best judgment rather than asking the user; note genuinely borderline calls in the final report (step 8) instead of stopping to ask.
 - Leave closed dated audits untouched; if one contains a fact that needs correcting, open a new dated file per the append-only rule instead of editing the original.
 
 ### 6. Stamp the Curate Marker
@@ -78,5 +80,5 @@ Report:
 
 - Curate operates on the whole tree; reflect operates on the current session. Don't use curate to do reflect's job (appending new session learnings) — run reflect first if there's fresh material, then curate to clean up.
 - Curate can restructure fully, but "restructure, do not patch" is not a license to reorganize a domain that's already clean — see `KNOWLEDGE_ORG.md`'s "wrong time to restructure" list.
-- Never invent facts to resolve an ambiguity; ask the user.
-- Confirm before large-blast-radius moves/deletes; small, obviously-correct fixes don't need a pause.
+- Curate only ever edits files under `knowledge/` (including `.local/`). It never edits code, config, or any file outside the knowledge tree — a knowledge/code mismatch gets flagged for review, not fixed on either side.
+- Curate asks the user only about business-level fact questions (e.g. which of two conflicting facts is true). Organization, classification, and restructuring calls are curate's own to make from `KNOWLEDGE_ORG.md` — never ask the user how to organize. The one exception: pause for a go-ahead before executing a large-blast-radius restructuring (many files moved/merged/deleted) — that's a safety checkpoint on the action, not a question about organization.

@@ -232,11 +232,15 @@ if kn is not None:
     edit_part = italic(f"\033[1m{n_edit}{RESET}{DIM} edited ({RESET}\033[1m{edit_pct:.0f}%{RESET}{DIM}){RESET}")
     kn_str = f"{DIM}knowledge:{RESET} " + SEP.join([read_part, edit_part])
 
-    # Reflect nudge — code changed (>=3 non-knowledge files) or a long investigation
-    # (>=25 tool calls over >=15min) happened, and reflect hasn't run yet this session.
+    # Reflect nudge — code changed (>=8 non-knowledge files) or a long investigation
+    # (>=45 tool calls over >=30min) happened, reflect hasn't run yet this session, AND no
+    # knowledge file has been touched at all (n_edit == 0). Agents are expected to update
+    # knowledge inline as they work (see AGENTS.md), so reflect is an end-of-session catch-all,
+    # not the primary capture path — the nudge should only fire when nothing was captured live,
+    # not on every session with a few edits.
     duration_min = (data.get("cost", {}).get("total_duration_ms") or 0) / 60000
-    edits_trigger = n_non_kn_edit >= 3
-    activity_trigger = tool_calls >= 25 and duration_min >= 15
+    edits_trigger = n_non_kn_edit >= 8 and n_edit == 0
+    activity_trigger = tool_calls >= 45 and duration_min >= 30 and n_edit == 0
     if not reflected and (edits_trigger or activity_trigger):
         reasons = "+".join(r for r, on in (("edits", edits_trigger), ("activity", activity_trigger)) if on)
         kn_str += SEP + italic(f"{Y}●{RESET} \033[1mreflect?{RESET} {DIM}({reasons}){RESET}")
