@@ -1,11 +1,10 @@
 {
   "name": "arwyl-lite",
   "displayName": "Arwyl Lite",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Knowledge-tree conventions, reflect/curate/handoff skills, and a status line for Claude Code.",
   "author": {
     "name": "TraceM171"
   },
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills/"
 }
