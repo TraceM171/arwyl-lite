@@ -335,6 +335,12 @@ def session_line_diff():
 # reflect"; edits at or before it are reflect's own writes and don't count. No reflect this session
 # leaves the boundary at -1, so everything since session start counts (matches AGENTS.md's "capture
 # as you go" framing: first reflect, or session start, whichever is the relevant zero point).
+#
+# `curate_windows` is the same idea applied to curate: a list of (start, end) line ranges, one per
+# curate invocation this session, using identical open/close detection. A curate pass makes deliberate,
+# already-reviewed cleanup edits — not live capture at risk of duplication — so edits falling inside
+# any window are excluded from `edited_since_reflect` the same way reflect's own edits are, regardless
+# of where the window falls relative to `reflect_boundary`.
 def knowledge_activity():
     if not transcript_path or not project_dir:
         return None
@@ -376,9 +382,13 @@ def knowledge_activity():
     # like that appears before EOF (reflect was the literal last thing that ran), the boundary
     # closes at end-of-file — none of reflect's edits should count as "since reflect" either way.
     reflect_cmd_re = re.compile(r"<command-name>/(?:[^<:]+:)?reflect</command-name>")
+    curate_cmd_re = re.compile(r"<command-name>/(?:[^<:]+:)?curate</command-name>")
     reflect_boundary = -1
     reflected = False
     awaiting_boundary = False
+    curate_windows = []
+    awaiting_curate_boundary = False
+    curate_window_start = None
     for line_no, line in enumerate(lines):
         try:
             entry = json.loads(line)
@@ -392,23 +402,36 @@ def knowledge_activity():
                 isinstance(b, dict) and b.get("type") == "tool_result" for b in content
             )
             is_reflect_command = isinstance(content, str) and bool(reflect_cmd_re.search(content))
+            is_curate_command = isinstance(content, str) and bool(curate_cmd_re.search(content))
             if awaiting_boundary and not is_tool_result_only and not is_meta and not is_reflect_command:
                 reflect_boundary = line_no
                 awaiting_boundary = False
+            if awaiting_curate_boundary and not is_tool_result_only and not is_meta and not is_curate_command:
+                curate_windows.append((curate_window_start, line_no))
+                awaiting_curate_boundary = False
             if is_reflect_command:
                 reflected = True
                 awaiting_boundary = True
+            if is_curate_command:
+                curate_window_start = line_no
+                awaiting_curate_boundary = True
             continue
         if etype != "assistant":
             continue
         for block in entry.get("message", {}).get("content") or []:
             if isinstance(block, dict) and block.get("type") == "tool_use" and block.get("name") == "Skill":
                 skill_name = (block.get("input") or {}).get("skill") or ""
-                if skill_name.rsplit(":", 1)[-1] == "reflect":
+                tail = skill_name.rsplit(":", 1)[-1]
+                if tail == "reflect":
                     reflected = True
                     awaiting_boundary = True
+                elif tail == "curate":
+                    curate_window_start = line_no
+                    awaiting_curate_boundary = True
     if awaiting_boundary:
         reflect_boundary = len(lines)
+    if awaiting_curate_boundary:
+        curate_windows.append((curate_window_start, len(lines)))
 
     # Pass 2: tally reads/edits against the now-known boundary.
     read_files, edited_files, non_kn_edited_files = set(), set(), set()
@@ -435,7 +458,8 @@ def knowledge_activity():
                     read_files.add(fp)
                 elif name in ("Edit", "Write", "NotebookEdit"):
                     edited_files.add(fp)
-                    if line_no > reflect_boundary:
+                    in_curate_window = any(s <= line_no <= e for s, e in curate_windows)
+                    if line_no > reflect_boundary and not in_curate_window:
                         edited_since_reflect.add(fp)
             elif name in ("Edit", "Write", "NotebookEdit"):
                 non_kn_edited_files.add(fp)
@@ -534,7 +558,7 @@ if kn is not None:
     #    (>=45 tool calls over >=30min) happened, no knowledge file touched (n_edit == 0), and
     #    reflect hasn't run yet this session.
     # 2. dup_risk_trigger — more than 2 knowledge files edited since the last reflect pass (or
-    #    since session start, if reflect hasn't run yet), excluding reflect's own edits.
+    #    since session start, if reflect hasn't run yet), excluding reflect's and curate's own edits.
     duration_min = (data.get("cost", {}).get("total_duration_ms") or 0) / 60000
     edits_trigger = n_non_kn_edit >= 8 and n_edit == 0
     activity_trigger = tool_calls >= 45 and duration_min >= 30 and n_edit == 0
