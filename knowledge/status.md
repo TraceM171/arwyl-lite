@@ -16,7 +16,7 @@ This machine's marketplace checkout and plugin cache were last refreshed to `0.1
 
 ## Recent changes
 
-- **`b0471bd`** — statusline: dropped the always-on "N dirty/changed (Y%)" baseline stats from the reflect/curate segments — both now show only a bare dot + label + one-word reason (`dirtiness`) when their trigger fires, nothing otherwise. Also fixed read/edit % exceeding 100% (files renamed/merged/deleted mid-session, e.g. by a curate pass, were staying in the numerator after `total_files` dropped them — now filtered to paths that still exist). Bumped to 0.1.11.
+- **`b0471bd`** — statusline: dropped always-on dirty/changed baseline stats (nudge-only now), fixed read/edit % exceeding 100% after mid-session file renames/deletes. Bumped to 0.1.11.
 - **`efd5ed9`** — added "Open entries are pointers, not plans" (status/plan split, `phases.md`/`plan.md`) and de-biased infra-only examples across the rule docs. Bumped to 0.1.10.
 - **`85fe55a`** — merged statusline's dirtiness stat into the reflect segment (`reflect: N dirty (Y%)`), made the count clickable. Bumped to 0.1.9.
 - **`0e783e3`** — fixed the reflect-boundary detector: tool-result and `isMeta` transcript entries were closing the boundary before reflect's own edits ran, so its own writes always counted as dirty. Bumped to 0.1.8.
