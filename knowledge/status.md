@@ -8,15 +8,15 @@
 
 (The push to get `0.1.7` out briefly failed — SSH agent couldn't sign with the hardware key, "agent refused operation" — retried clean once the key was touched; every version since has pushed normally.)
 
-This machine's marketplace checkout and plugin cache were last refreshed to `0.1.10` (`fd0c381`) via `/plugin marketplace update` + `/reload-plugins` on 2026-07-11 — now three versions stale against the `0.1.13` push above; needs another refresh cycle before this machine (or sanctum, which shares the cache) picks it up. Manual semver bump is still what actually invalidates a stale cached copy, even with the per-marketplace auto-update toggle on (cache is keyed by the `version` string).
+This machine's marketplace checkout and plugin cache were refreshed to `0.1.13` via `/plugin marketplace update` + `/reload-plugins` on 2026-07-16, right after the push above.
 
 ## Known consumers
 
-- **sanctum** — installed via the GitHub marketplace route, project-scope enabled (`.claude/settings.json`). Shares this machine's plugin cache (not a separate install) — still on the cached `0.1.10`; owner plans to run `/plugin marketplace update` there to pick up `0.1.13`. Last confirmed running the plugin during a 2026-07-15 `curate` pass (the one whose bare-date marker exposed the drift-counting bug fixed in `0.1.13` — see Recent changes).
+- **sanctum** — installed via the GitHub marketplace route, project-scope enabled (`.claude/settings.json`). Shares this machine's plugin cache (not a separate install) — the refresh above updates the one cache both draw from, so sanctum picks up `0.1.13` on its next session/`/reload-plugins`, no separate marketplace-update needed there. Last confirmed running the plugin during a 2026-07-15 `curate` pass (the one whose bare-date marker exposed the drift-counting bug fixed in `0.1.13` — see Recent changes).
 
 ## Recent changes
 
-- **(uncommitted)** — `_curated.md` marker switched from a bare date (`YYYY-MM-DD`) to a full UTC timestamp (`YYYY-MM-DDTHH:MM:SSZ`); `curate_signal()` and the curate skill updated to match. Root cause: bare-date markers are midnight-inclusive under `git log --since`, so a curate pass run anywhere but first-thing-in-the-morning had that whole day's pre-pass commits double-counted as post-pass drift — confirmed against sanctum's 2026-07-15 session logs (curate ran last that day, at 19:49 UTC, after a 26-file storage/backup rewrite it had already reviewed; the bare-date marker still made the next day's nudge count all 26 files as new drift). Old bare-date markers (this tree's own `knowledge/_curated.md` says `2026-07-11`; sanctum's says `2026-07-15`) no longer match the new regex and fall back to the never-curated `total_files >= 15` gate until their next curate pass rewrites them in the new format — expected, not a bug. Also reordered curate's steps 6/7 (commit-then-stamp, not stamp-then-commit) and split the marker into its own trailing commit: verified against sanctum's real commits that a timestamp alone still didn't fully close the gap — the pass's own closing commit (`238d692`, landing 39s after the marker would've been written mid-session) still counted as fresh drift on its own, since any commit landing at or after the marker instant counts. Stamping strictly after that commit lands closes it. Bumped to 0.1.13.
+- **`6aca49d`** — curate: `_curated.md` marker changed from a bare date to a full UTC timestamp, and marker-stamping moved to after the pass's own commit (not before) — bare-date `git log --since` is midnight-inclusive and double-counted same-day pre-pass commits as drift; even a timestamp alone still let the pass's own closing commit count itself as drift the next time. Bumped to 0.1.13.
 - **`3df49f2`** — statusline: curate's own knowledge edits no longer count toward the dirtiness/dup-risk trigger (mirrors the existing reflect-boundary exclusion). Bumped to 0.1.12.
 - **`b0471bd`** — statusline: dropped always-on dirty/changed baseline stats (nudge-only now), fixed read/edit % exceeding 100% after mid-session file renames/deletes. Bumped to 0.1.11.
 - **`efd5ed9`** — added "Open entries are pointers, not plans" (status/plan split, `phases.md`/`plan.md`) and de-biased infra-only examples across the rule docs. Bumped to 0.1.10.
@@ -32,5 +32,5 @@ This machine's marketplace checkout and plugin cache were last refreshed to `0.1
 
 ## Open
 
-- Refresh this machine's marketplace cache to `0.1.13` (`/plugin marketplace update` + `/reload-plugins`) — owner doing this after the push; confirm sanctum picks it up next session (shared cache), and that its next `curate` pass rewrites `_curated.md` from the old bare date into the new timestamp format.
+- Confirm sanctum's next `curate` pass rewrites its `_curated.md` from the old bare date (`2026-07-15`) into the new timestamp format — the shared-cache refresh to `0.1.13` is done (see Current version); this is the one remaining step.
 - This `knowledge/` tree itself is brand new (scaffolded 2026-07-10) — expect a `reflect`/`curate` pass to reshape it as real work accumulates. No domains yet, by design.
