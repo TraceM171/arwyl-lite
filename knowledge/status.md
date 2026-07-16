@@ -4,7 +4,7 @@
 
 ## Current version
 
-`0.1.12` (`claude_code/.claude-plugin/plugin.json`), pushed to `origin/main` (`3df49f2`). Marketplace: `arwyl-lite-marketplace` → GitHub `TraceM171/arwyl-lite`.
+`0.1.13` (`claude_code/.claude-plugin/plugin.json`), not yet pushed to `origin/main`. Marketplace: `arwyl-lite-marketplace` → GitHub `TraceM171/arwyl-lite`.
 
 (The push to get `0.1.7` out briefly failed — SSH agent couldn't sign with the hardware key, "agent refused operation" — retried clean once the key was touched; every version since has pushed normally.)
 
@@ -16,6 +16,7 @@ This machine's marketplace checkout and plugin cache were last refreshed to `0.1
 
 ## Recent changes
 
+- **(uncommitted)** — `_curated.md` marker switched from a bare date (`YYYY-MM-DD`) to a full UTC timestamp (`YYYY-MM-DDTHH:MM:SSZ`); `curate_signal()` and the curate skill updated to match. Root cause: bare-date markers are midnight-inclusive under `git log --since`, so a curate pass run anywhere but first-thing-in-the-morning had that whole day's pre-pass commits double-counted as post-pass drift — confirmed against sanctum's 2026-07-15 session logs (curate ran last that day, at 19:49 UTC, after a 26-file storage/backup rewrite it had already reviewed; the bare-date marker still made the next day's nudge count all 26 files as new drift). Old bare-date markers (this tree's own `knowledge/_curated.md` says `2026-07-11`; sanctum's says `2026-07-15`) no longer match the new regex and fall back to the never-curated `total_files >= 15` gate until their next curate pass rewrites them in the new format — expected, not a bug. Also reordered curate's steps 6/7 (commit-then-stamp, not stamp-then-commit) and split the marker into its own trailing commit: verified against sanctum's real commits that a timestamp alone still didn't fully close the gap — the pass's own closing commit (`238d692`, landing 39s after the marker would've been written mid-session) still counted as fresh drift on its own, since any commit landing at or after the marker instant counts. Stamping strictly after that commit lands closes it. Bumped to 0.1.13.
 - **`3df49f2`** — statusline: curate's own knowledge edits no longer count toward the dirtiness/dup-risk trigger (mirrors the existing reflect-boundary exclusion). Bumped to 0.1.12.
 - **`b0471bd`** — statusline: dropped always-on dirty/changed baseline stats (nudge-only now), fixed read/edit % exceeding 100% after mid-session file renames/deletes. Bumped to 0.1.11.
 - **`efd5ed9`** — added "Open entries are pointers, not plans" (status/plan split, `phases.md`/`plan.md`) and de-biased infra-only examples across the rule docs. Bumped to 0.1.10.
