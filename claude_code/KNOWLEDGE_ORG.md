@@ -259,6 +259,27 @@ If a file cannot be summarized in one sentence, it is doing too much. Split it. 
 
 When a fact in one file is relevant to another, link to the canonical source. Do not copy the text across files. Restated text drifts; links do not.
 
+### Place for retrieval, not just for kind
+
+The six kinds and the domain structure answer *what kind of fact is this, and whose is it?* — and that fixes where a fact is **stored**. It does not, by itself, put the reader **there when the fact matters**. A fact filed in exactly the right place is still buried if nothing brings the reader to it at the moment of need. So placement carries a second question, asked at write time alongside the kind: **when will this be needed, and will it be reachable then?**
+
+There are only three ways a stored fact reaches a future reader:
+
+1. **Guaranteed reads** — the mandatory files (`_basic.md`, `.local/_basic.md`, `status.md`) are read every session. This surface fits facts that are relevant *regardless of task*.
+2. **Domain navigation** — the reader opens a domain's `_basic.md` when a task touches that domain. This fits facts scoped to one domain: whoever works there finds them.
+3. **Links** — a pointer from a file the reader *will* open to the file holding the fact. This is the only bridge for a **cross-cutting** fact whose trigger lies outside its own domain.
+
+The hard case is that third one: a cross-cutting constraint — a budget rule, a style or language preference, a security limit — that must fire inside an *unrelated* task. Its correct-by-kind home (a top-level `decision-<topic>.md`, an owner preference in `.local/`) is reached only by navigation or a link, and nobody working on "pick a backup provider" navigates to a cost policy on their own. **A cross-cutting constraint that is filed correctly but linked from nowhere it applies is buried in practice.**
+
+Two mitigations — apply whichever fit; they are not exclusive:
+
+- **Always-relevant → put the pointer where reading is guaranteed.** If a constraint bears on tasks in every domain, its one-line pointer belongs in a guaranteed-read file: the top-level `_basic.md` "key decisions" list, or `.local/_basic.md` for an owner-scoped one. Do not rely on the reader choosing to navigate to it.
+- **Link it from the task sites it governs.** The `status.md` Open item, the per-X file, the domain `_basic.md` where a decision it constrains will be made — each links back to the constraint. The pointer costs one line and survives; it is the bridge the reader crosses without knowing to look for it.
+
+**But guaranteed-read space is finite — spend it, don't flood it.** The mandatory files get read *because* they are short. Stuff every constraint's full text into `_basic.md`/`.local/_basic.md` and they stop being read carefully — and an oversized mandatory file can silently truncate before the reader ever sees the end. The balance: the fact lives in its proper file; a *pointer* sits in the guaranteed-read index and at the task sites. Reserve full content in a mandatory file for the few constraints that are genuinely always-on. Place economically; let the links do the reach.
+
+That is the write-side. Its read-side complement lives in the consultation contract (`AGENTS.md`): **follow those cross-cutting pointers when a task could touch them.** The two sides meet at the link — placement makes the constraint reachable, consultation reaches for it. Neither is a license to bulk-read the tree: the point is to catch the *specific* constraint that bears on the task, not to read everything.
+
 ### Recent-changes entries are pointers, not records
 
 A `status.md` "recent changes" entry is **at most two lines and ends with a link**: what changed, and where the full record lives. It is not the record itself.
@@ -364,6 +385,7 @@ A restructuring is the wrong time to:
 | Audits are dated and append-only | History silently rewritten |
 | Patterns are recipes, not design | Models that conflate "what" with "how" |
 | No duplication; link, do not restate | Two files claiming to be the truth |
+| Place for retrieval: link cross-cutting constraints from a guaranteed-read file and/or the task sites they govern; keep the mandatory files short | Correctly-filed facts that go unread at the moment they apply |
 | Recent-changes entries: max 2 lines, ends with a link, newest first | `status.md` bloating into a de facto changelog/audit |
 | Open entries are pointers, not plans | `status.md`/backlogs silently absorbing multi-step, multi-session initiatives |
 | Top-level is cross-cutting only | Top-level becomes a junk drawer |

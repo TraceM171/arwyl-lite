@@ -25,9 +25,9 @@ Alternative exists: omit `version` entirely → Claude Code falls back to commit
 
 ## AGENTS.md is inlined; knowledge files are not
 
-`claude_code/AGENTS.md` is pasted verbatim into the `SessionStart` hook's context (Claude Code hard-caps hook `additionalContext` at 10,000 characters — silent truncation past that, no error). A pre-commit hook (`.githooks`, opt in via `git config core.hooksPath .githooks`) blocks any commit that pushes it over an **8,500-character** budget. The constant lives in two places that must stay in sync: `.githooks/pre-commit` and `hooks/session-start.py`.
+`claude_code/AGENTS.md` is pasted verbatim into the `SessionStart` hook's context (Claude Code hard-caps hook `additionalContext` at 10,000 characters — silent truncation past that, no error). A pre-commit hook (`.githooks`, opt in via `git config core.hooksPath .githooks`) blocks any commit that pushes it over an **8,800-character** budget. The constant lives in two places that must stay in sync: `.githooks/pre-commit` and `hooks/session-start.py`.
 
-Raised 8,000 → 8,500 in `0.1.14` — the original had no measurement behind it, and the sixth kind's reminder line had to fit. The payload's only other content is the ~150-char read-instruction line, so the worst case is ~8,660 against the 10,000 cap. Measured live at the raise: 8,092 total, 1,908 margin.
+Raised 8,000 → 8,500 in `0.1.14` (the sixth kind's reminder line had to fit), then 8,500 → 8,800 in `0.1.15` (the "Place for retrieval" read/write pointers had to fit — see `decision-retrievability.md`). The payload's only other content is the ~150-char read-instruction line, so the worst case is ~8,950 against the 10,000 cap. Measured live after the `0.1.15` raise: 8,567 payload, ~1,433 margin. Each raise is deliberate: keep new inlined content to minimal pointers, full text in `KNOWLEDGE_ORG.md`, so the budget rises rarely.
 
 `_basic.md` / `status.md` files are deliberately *not* inlined the same way — a growing `status.md` would blow the cap unnoticed — so the hook points the agent at them and lets it `Read` them instead (`09556ec`).
 
@@ -38,6 +38,10 @@ On a **plugin install** there is no `KNOWLEDGE_ORG.md` anywhere in the consuming
 Wording matters more than it looks: until `0.1.14` both `AGENTS.md` and `curate.md` said *"invoke the skill if available, otherwise read the file directly."* Sanctum's transcripts show **16 direct-read attempts, none of which could have succeeded** — 10 at the project root, 5 under `knowledge/`, 1 at a guessed cache path missing the `claude_code/` segment. Agents burned failed tool calls before falling back to the skill. The sanctioned-sounding fallback caused it.
 
 Reading the cache path directly is also wrong even when it resolves: it is version-pinned, so it silently serves a stale copy after an upgrade. The direct-read fallback now applies only to manual installs, where the repo has its own symlinked copy at a known path.
+
+## Skills are written for the model that runs them
+
+`reflect` and `curate` typically run on different models, and their guidance is pitched accordingly. `reflect` runs often and on a Sonnet-class model (currently Sonnet 5, the common day-to-day model) — so its steps are concrete and checklist-shaped, safe to follow literally. `curate` runs rarely and on an Opus-class model (currently Opus 4.8) — so it can lean on judgment for the ambiguous classification calls that are its whole point. When editing a skill, match the guidance to its runtime: rote checklists for `reflect`, judgment-based prose for `curate` — not the reverse.
 
 ## Memory discipline
 

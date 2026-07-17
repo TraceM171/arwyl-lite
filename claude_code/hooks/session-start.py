@@ -24,11 +24,14 @@ except OSError:
 # session, so drift can't go unnoticed the way the knowledge-file truncation did.
 #
 # Raised 8000 -> 8500 in 0.1.14, deliberately: the Decision kind is a permanent sixth entry in the
-# taxonomy and its quick-reminder line has to live here. 8000 was set with no measurement behind it;
-# the only other thing in the payload is the ~150-char read-instruction line below, so the real
-# worst case is ~8660 against the 10,000 cap — still ~1.3k of margin. Keep this in sync with
+# taxonomy and its quick-reminder line has to live here.
+# Raised 8500 -> 8800 in 0.1.15, deliberately: the "Place for retrieval, not just for kind" rule
+# added two permanent pointers here — a read-side one (consultation item 4: follow cross-cutting
+# pointers) and a live-capture one — with the full rule kept in KNOWLEDGE_ORG.md, not inlined. The
+# only other thing in the payload is the ~150-char read-instruction line below, so the real worst
+# case is ~8950 against the 10,000 cap — still ~1k of margin. Keep this in sync with
 # AGENTS_MD_BUDGET in .githooks/pre-commit.
-AGENTS_MD_BUDGET = 8500
+AGENTS_MD_BUDGET = 8800
 context = [agents_md]
 if len(agents_md) > AGENTS_MD_BUDGET:
     context.append(

@@ -1,14 +1,14 @@
 # Status — Current State
 
-**As of 2026-07-16.**
+**As of 2026-07-17.**
 
 ## Current version
 
-`0.1.14` (`claude_code/.claude-plugin/plugin.json`), pushed to `origin/main` (`5b28d68`). Marketplace: `arwyl-lite-marketplace` → GitHub `TraceM171/arwyl-lite`.
+`0.1.15` (`claude_code/.claude-plugin/plugin.json`) — **prepared this session, uncommitted and unpushed** (the "Place for retrieval" retrievability change; see Recent changes). Last pushed version is `0.1.14` (`5b28d68`). Marketplace: `arwyl-lite-marketplace` → GitHub `TraceM171/arwyl-lite`.
 
 (The push to get `0.1.7` out briefly failed — SSH agent couldn't sign with the hardware key, "agent refused operation" — retried clean once the key was touched; every version since has pushed normally.)
 
-This machine's marketplace checkout and plugin cache were last refreshed to `0.1.13` (2026-07-16, `/plugin marketplace update` + `/reload-plugins`). **`0.1.14` is pushed but not yet pulled into the cache** — see Open.
+This machine's marketplace checkout and plugin cache were last refreshed to `0.1.13` (2026-07-16, `/plugin marketplace update` + `/reload-plugins`). **`0.1.14` (pushed) and `0.1.15` (uncommitted) are both not yet in the cache** — see Open.
 
 ## Known consumers
 
@@ -16,6 +16,7 @@ This machine's marketplace checkout and plugin cache were last refreshed to `0.1
 
 ## Recent changes
 
+- **`0.1.15` (uncommitted)** — added the "Place for retrieval" rule (retrievability as a second placement axis, wired through AGENTS/reflect/curate). Preventive — `decision-retrievability.md`.
 - **`5b28d68`** — **Decision** added as a sixth kind, plus five rule fixes, all traced to one root cause in a sanctum field review. Bumped to 0.1.14. Why + rejected alternatives: `decision-taxonomy-kinds.md`.
 - **`6aca49d`** — curate: `_curated.md` marker changed from a bare date to a full UTC timestamp, and marker-stamping moved to after the pass's own commit (not before) — bare-date `git log --since` is midnight-inclusive and double-counted same-day pre-pass commits as drift; even a timestamp alone still let the pass's own closing commit count itself as drift the next time. Bumped to 0.1.13.
 - **`3df49f2`** — statusline: curate's own knowledge edits no longer count toward the dirtiness/dup-risk trigger (mirrors the existing reflect-boundary exclusion). Bumped to 0.1.12.
@@ -33,6 +34,6 @@ This machine's marketplace checkout and plugin cache were last refreshed to `0.1
 
 ## Open
 
-- Refresh this machine's marketplace checkout + plugin cache to `0.1.14` (`/plugin marketplace update` + `/reload-plugins`), then run a `curate` in sanctum in a **fresh** session to exercise the new rules — owner will do this by hand.
+- Commit + push `0.1.15`, then refresh this machine's marketplace checkout + plugin cache to it (`/plugin marketplace update` + `/reload-plugins`; currently `0.1.13`), then run a `curate` in sanctum in a **fresh** session to exercise the new rules — owner will do this by hand.
 - This `knowledge/` tree itself is brand new (scaffolded 2026-07-10) — expect a `reflect`/`curate` pass to reshape it as real work accumulates. No domains yet, by design.
 - Sanctum has pre-`0.1.14` drift the new rules now name: decisions to extract from its infrastructure audit chain, `.local/collab.md` sections failing the portability test, and `operations/*-setup.md` shadow files. Owner's call, not this project's work — recorded so the next `curate` there isn't a surprise.
