@@ -9,7 +9,7 @@ The kinds exist to separate **update cadences**: a model changes when the design
 
 **Decision earns its own kind because it is the only kind whose cadence is "rarely, but it must be possible."** The other five are each either frozen (audit) or continuously live (status/model/index/pattern). A choice-in-force is neither: it is stable for months, then revisited — and revisiting it must be able to *edit something*, not just append.
 
-Filing decisions under Audit (the original design) made that impossible, because audits are append-only. The consequence, observed in sanctum and not predicted:
+Filing decisions under Audit (the original design) made that impossible, because audits are append-only. The consequence, observed in the field-test consumer and not predicted:
 
 - Every re-examination of a settled choice had to open a **new dated file**. Storage architecture accumulated a four-file correction chain (`storage-architecture` → `pricing-correction` → `storagebox-live-tier-reverified` → `backup-retention-decision`) in two days.
 - Answering "what did we decide?" cost four reads plus a mental patch-merge, with **nothing marking which answer was live**.
@@ -36,4 +36,4 @@ This also explains a complaint that looked separate: "dated audit files are used
 ## Deliberation
 
 - Commit `5b28d68` — the change itself; body carries the full field-review reasoning.
-- Field review of **sanctum** (2026-07-16), the heaviest consumer: three owner complaints — audits used for non-audits, decisions scattering across status/audit/service/security files, and "where does bare-vs-container go?" — all traced to this one root cause.
+- Field review of the field-test consumer (2026-07-16), the heaviest real-world user: three owner complaints — audits used for non-audits, decisions scattering across status/audit/service/security files, and "where does bare-vs-container go?" — all traced to this one root cause.

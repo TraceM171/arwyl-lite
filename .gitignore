@@ -1,0 +1,9 @@
+# Owner-specific local knowledge — private, not published to the repo.
+# The `.local/` tree holds one owner's context (accounts, environment, and the
+# private field-test consumer used to improve arwyl). It is real context kept on
+# disk locally, but it does not belong in the public repo.
+knowledge/.local/
+
+# Python build artifacts
+__pycache__/
+*.pyc

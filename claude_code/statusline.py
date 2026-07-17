@@ -376,7 +376,7 @@ def knowledge_activity():
     # above) immediately followed by a second type:"user" entry containing the expanded skill
     # prompt text, flagged `isMeta: true`. Treating either of those as "the next user turn" closed
     # the boundary one line after the invocation — before reflect had done any of its actual work
-    # — so its own edits counted as "since last reflect" (confirmed against sanctum's real
+    # — so its own edits counted as "since last reflect" (confirmed against the field-test consumer's real
     # transcript: 8/8 edited-since-reflect immediately after a reflect run). Skip both: only a
     # user entry that's neither tool-result-only nor isMeta really closes the boundary. If nothing
     # like that appears before EOF (reflect was the literal last thing that ran), the boundary
@@ -485,7 +485,7 @@ def knowledge_activity():
 # so it sweeps in every commit from that whole calendar day — including ones made *before* curate
 # ran that day, and curate's own reviewed-but-not-yet-committed work landing moments after. That
 # double-counted a day's ordinary work as post-curate drift whenever curate ran anywhere but first
-# thing in the morning (confirmed against sanctum's 2026-07-15 session logs: curate ran last, at
+# thing in the morning (confirmed against the field-test consumer's 2026-07-15 session logs: curate ran last, at
 # 19:49 UTC, after reviewing that day's 26-file storage/backup rewrite and finding nothing to fix —
 # but the bare-date marker still made the next session's --since=2026-07-15 catch all 26 files,
 # including ones committed hours before curate even started). A full timestamp fixes the common

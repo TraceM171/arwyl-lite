@@ -1,13 +1,13 @@
 ---
 name: field-study
-description: Study how the arwyl system behaves in a real consumer project (like sanctum) to find gaps to fix in THIS repo. Call with a target project path, plus optional focus areas. Use when the maintainer says "field study", "field review", or asks to analyze how arwyl is working in a consumer. Internal to this repo — never shipped in the plugin.
+description: Study how the arwyl system behaves in a real consumer project to find gaps to fix in THIS repo. Call with a target project path, plus optional focus areas. Use when the maintainer says "field study", "field review", or asks to analyze how arwyl is working in a consumer. Internal to this repo — never shipped in the plugin.
 ---
 
 # Field Study Skill (internal to this repo)
 
 Use when the maintainer wants to study how the arwyl system is *behaving* in a real third-party consumer project — its knowledge tree, its recent `reflect`/`curate` runs, its agent sessions — and turn what's found into concrete improvements to **this** repo.
 
-This is the skill behind the "sanctum field review" that produced most of arwyl's rules, and behind synthetic studies like `knowledge/audit-2026-07-retrievability-burial-test.md`. It generalizes that work so it can be pointed at any consumer.
+This is the skill behind the field reviews that produced most of arwyl's rules, and behind synthetic studies like `knowledge/audit-2026-07-retrievability-burial-test.md`. It generalizes that work so it can be pointed at any consumer.
 
 ## What this is, and what it is NOT
 
@@ -26,7 +26,7 @@ A gap is only a gap *relative to the current design*. Before calling something a
 
 ## Inputs (from the invocation arguments)
 
-- **Required — target project path**: the first argument is the consumer to study (e.g. the sanctum repo). If it's missing, ask for it before doing anything else.
+- **Required — target project path**: the first argument is the consumer to study — the path to its repo. If it's missing, ask for it before doing anything else.
 - **Optional — focus areas**: any remaining text is specific concerns to deep-dive *in addition to* the general pass, e.g. "the user feels `curate` isn't catching mega-files" or "`reflect` seems to drop preferences". Treat each as a **hypothesis to investigate with evidence**, not a conclusion to confirm.
 
 ## Workflow
@@ -55,7 +55,7 @@ Draw from as many of these as exist:
 
 **b. What recent `reflect`/`curate` runs actually did.** Read the consumer's `knowledge/` git history. Did `reflect` capture the right things and file them in the right kind and home? Did it miss things the session clearly produced? Did `curate` genuinely clean, or rubber-stamp its own session's writes (the self-review failure)? Correction-chains, misfiles, a decision with no living home, a `status.md` entry grown into a paragraph — trace each back to the rule that should have caught it.
 
-**c. Agent behaviour in session transcripts** (the richest source, when available). This is where sanctum's reviews found the sharpest rules — agents making failed direct-read attempts for a file that only exists in the plugin cache (16 in one review), acting on a stale `status.md` assumption, or batching learnings instead of capturing live. Look for: instructions that did not produce the intended behaviour, tool calls wasted, files that should have been read and weren't, the consultation contract ignored.
+**c. Agent behaviour in session transcripts** (the richest source, when available). This is where the field reviews found the sharpest rules — agents making failed direct-read attempts for a file that only exists in the plugin cache (16 in one review), acting on a stale `status.md` assumption, or batching learnings instead of capturing live. Look for: instructions that did not produce the intended behaviour, tool calls wasted, files that should have been read and weren't, the consultation contract ignored.
 
 **d. The focus areas** from the arguments. Investigate each with evidence. If the real logs neither confirm nor deny a suspected gap, say so plainly — and consider a synthetic test (step 5) rather than guessing.
 

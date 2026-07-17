@@ -13,7 +13,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `decision-taxonomy-kinds.md` | the six kinds — why, and the alternatives rejected |
 | `decision-retrievability.md` | retrievability as a second placement axis — why (preventive) |
 | `audit-2026-07-retrievability-burial-test.md` | the burial test: design, results, why it didn't reproduce |
-| `status.md` | current version, known consumers, recent changes |
+| `status.md` | current version, recent changes, open items |
 | `.local/_basic.md` | owner-specific context |
 
 ## Read order
@@ -29,4 +29,4 @@ The product is `claude_code/` — the payload other projects install (as a Claud
 
 ## Philosophy
 
-Design-first, and every rule added to `KNOWLEDGE_ORG.md` / `AGENTS.md` has come from a concrete failure mode observed in a real consumer (sanctum), not from speculative design — with one deliberate exception: the "Place for retrieval" rule (2026-07-17) was added from a design-gap analysis *after* a synthetic test failed to reproduce the burial it targeted. See `decision-retrievability.md` for why that exception was made, and `status.md`'s "Recent changes" for the latest examples.
+Design-first, and every rule added to `KNOWLEDGE_ORG.md` / `AGENTS.md` has come from a concrete failure mode observed in a real consumer, not from speculative design — with one deliberate exception: the "Place for retrieval" rule (2026-07-17) was added from a design-gap analysis *after* a synthetic test failed to reproduce the burial it targeted. See `decision-retrievability.md` for why that exception was made, and `status.md`'s "Recent changes" for the latest examples.

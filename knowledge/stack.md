@@ -19,7 +19,7 @@ Claude Code caches an installed plugin keyed by `plugin.json`'s `version` string
 
 Alternative exists: omit `version` entirely → Claude Code falls back to commit-SHA versioning, fully automatic once the per-marketplace auto-update toggle is on. Considered, not adopted — chose to keep explicit semver plus the auto-update toggle instead.
 
-**`installed_plugins.json` is not a reliable record of what a project runs.** `~/.claude/plugins/installed_plugins.json` pins a per-project `installPath`/`version`, but it goes stale: during the 2026-07-16 field review it listed `0.1.11` for sanctum while sanctum was demonstrably running `0.1.13`. It is a red herring — do not use it to determine a consumer's version. Trust, in order: the `/plugin` UI, or **behavioural evidence** in the consumer's own output (the `_curated.md` marker format proved `0.1.13` outright: bare date = ≤`0.1.11`, ISO timestamp + separate trailing commit = `0.1.13`). Version-discriminating behaviour beats metadata.
+**`installed_plugins.json` is not a reliable record of what a project runs.** `~/.claude/plugins/installed_plugins.json` pins a per-project `installPath`/`version`, but it goes stale: during the 2026-07-16 field review it listed `0.1.11` for the field-test consumer while it was demonstrably running `0.1.13`. It is a red herring — do not use it to determine a consumer's version. Trust, in order: the `/plugin` UI, or **behavioural evidence** in the consumer's own output (the `_curated.md` marker format proved `0.1.13` outright: bare date = ≤`0.1.11`, ISO timestamp + separate trailing commit = `0.1.13`). Version-discriminating behaviour beats metadata.
 
 **Skills load from the cache at session start.** A push (even after `/plugin marketplace update`) does not affect the session that made it — it keeps running the previously-cached skill text. Expect to write a rule and then have the *old* rule govern the same session's `reflect`/`curate`.
 
@@ -35,7 +35,7 @@ Raised 8,000 → 8,500 in `0.1.14` (the sixth kind's reminder line had to fit), 
 
 On a **plugin install** there is no `KNOWLEDGE_ORG.md` anywhere in the consuming project — it exists only inside the version-pinned plugin cache. So the rule docs must tell agents to **invoke the `knowledge-org` skill**, never to "read the file".
 
-Wording matters more than it looks: until `0.1.14` both `AGENTS.md` and `curate.md` said *"invoke the skill if available, otherwise read the file directly."* Sanctum's transcripts show **16 direct-read attempts, none of which could have succeeded** — 10 at the project root, 5 under `knowledge/`, 1 at a guessed cache path missing the `claude_code/` segment. Agents burned failed tool calls before falling back to the skill. The sanctioned-sounding fallback caused it.
+Wording matters more than it looks: until `0.1.14` both `AGENTS.md` and `curate.md` said *"invoke the skill if available, otherwise read the file directly."* The field-test consumer's transcripts show **16 direct-read attempts, none of which could have succeeded** — 10 at the project root, 5 under `knowledge/`, 1 at a guessed cache path missing the `claude_code/` segment. Agents burned failed tool calls before falling back to the skill. The sanctioned-sounding fallback caused it.
 
 Reading the cache path directly is also wrong even when it resolves: it is version-pinned, so it silently serves a stale copy after an upgrade. The direct-read fallback now applies only to manual installs, where the repo has its own symlinked copy at a known path.
 
