@@ -62,6 +62,6 @@ Quick reminder (still read the full rules before editing):
 - `.local/` is owner-specific. Test: *would a different owner of the same project need this?* If yes, it is not local.
 - Model files contain no dates, state, history, rationale, recipes, or open questions — link instead.
 - **A choice still in force is a decision, not an audit.** `decision-<topic>.md` in the domain it governs — living, edited in place; holds the current why + rejected alternatives. Dated audits hold the deliberation, frozen. Writing a dated file to correct a fact in an older one means that fact belongs in a decision/model file.
-- Status lives only in `status.md`; entries ≤2 lines ending in a link, newest first. Audits are dated, append-only. Patterns are recipes, not design.
+- Status lives only in `status.md`; entries ≤300 chars ending in a link, newest first. Audits are dated, append-only. Patterns are recipes, not design.
 - Link, do not restate. If a fact appears in two files, one of them is wrong.
 - Open/backlog entries are pointers too — ordered or cross-domain work goes in `phases.md`/`<domain>/plan.md`, not inline.

@@ -7,7 +7,7 @@ description: Study how the arwyl system behaves in a real consumer project to fi
 
 Use when the maintainer wants to study how the arwyl system is *behaving* in a real third-party consumer project — its knowledge tree, its recent `reflect`/`curate` runs, its agent sessions — and turn what's found into concrete improvements to **this** repo.
 
-This is the skill behind the field reviews that produced most of arwyl's rules, and behind synthetic studies like `knowledge/audit-2026-07-retrievability-burial-test.md`. It generalizes that work so it can be pointed at any consumer.
+This is the skill behind the field reviews that produced most of arwyl's rules, and behind synthetic studies like `knowledge/audit-2026-07-17-retrievability-burial-test.md`. It generalizes that work so it can be pointed at any consumer.
 
 ## What this is, and what it is NOT
 
@@ -64,11 +64,11 @@ Draw from as many of these as exist:
 - **Evidence** — concrete and cited: a file, a commit, a transcript excerpt. No "it seems like".
 - **Classification** — consumer error / **system gap** / needs-more-evidence.
 - For a system gap: **which file in this repo owns it**, and *why the current wording or mechanism failed to prevent it*.
-- **Honesty discipline** (from `knowledge/audit-2026-07-retrievability-burial-test.md`): an observed, repeated failure is strong evidence; a single occurrence, or a plausible-but-unseen worry, is weak. Do not promote a hypothesis to a gap. The project's bar is evidence-first (`knowledge/_basic.md`) — a rule change wants a real failure behind it.
+- **Honesty discipline** (from `knowledge/audit-2026-07-17-retrievability-burial-test.md`): an observed, repeated failure is strong evidence; a single occurrence, or a plausible-but-unseen worry, is weak. Do not promote a hypothesis to a gap. The project's bar is evidence-first (`knowledge/_basic.md`) — a rule change wants a real failure behind it.
 
 ### 5. When real evidence is inconclusive: a synthetic test
 
-If a gap is *suspected* but the consumer's real logs don't settle it, reproduce it synthetically — the method already recorded in `knowledge/audit-2026-07-retrievability-burial-test.md`:
+If a gap is *suspected* but the consumer's real logs don't settle it, reproduce it synthetically — the method already recorded in `knowledge/audit-2026-07-17-retrievability-burial-test.md`:
 
 - Build the **minimal conditions** that would trigger it (a small synthetic tree, a seeded input).
 - **Pre-register a rubric**, and plant a distinctive shibboleth so a "pass" is measurable, not interpretable after the fact.

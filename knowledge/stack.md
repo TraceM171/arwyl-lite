@@ -41,7 +41,37 @@ Reading the cache path directly is also wrong even when it resolves: it is versi
 
 ## Skills are written for the model that runs them
 
-`reflect` and `curate` typically run on different models, and their guidance is pitched accordingly. `reflect` runs often and on a Sonnet-class model (currently Sonnet 5, the common day-to-day model) — so its steps are concrete and checklist-shaped, safe to follow literally. `curate` runs rarely and on an Opus-class model (currently Opus 4.8) — so it can lean on judgment for the ambiguous classification calls that are its whole point. When editing a skill, match the guidance to its runtime: rote checklists for `reflect`, judgment-based prose for `curate` — not the reverse.
+`reflect` and `curate` are pitched at different runtimes. `reflect` runs often and on a Sonnet-class model (currently Sonnet 5, the common day-to-day model) — confirmed across many field runs — so its steps are concrete and checklist-shaped, safe to follow literally.
+
+**`curate`'s runtime was an assumption, and the only field observation contradicts it.** The design intent was an Opus-class model, so its guidance leans on judgment for the ambiguous classification calls. The one curate pass ever observed in the field-test consumer (2026-07-29, its first) ran on **Sonnet 5**, and no curate or reflect commit in that consumer's history is Opus-authored. N=1, so this is not settled — but "curate runs on Opus" must not be stated as fact until a second run is seen. Treat judgment-heavy prose in `curate.md` as a bet, not a guarantee, and prefer guidance that also survives a Sonnet runtime.
+
+The skill can no longer be *told* to pick a better model — it cannot; the model is fixed before the skill text loads. `curate.md`'s step-0 self-check instead has it name its model and offer the user a deferral, which is an instruction the reader can actually act on. See `audit-2026-07-29-field-study-curate.md`.
+
+When editing a skill, match the guidance to its runtime: rote checklists for `reflect`, judgment-based prose for `curate` — not the reverse.
+
+## Enforcement mechanisms
+
+Some rules are enforced by machinery rather than prose — the choice, and when it applies, is
+`decision-mechanism-over-prose.md`. What ships:
+
+- **`hooks/status-budget.py`** — `PostToolUse` on `Edit`/`Write`/`MultiEdit`; measures `status.md`
+  recent-changes entries at the moment of the write, reports any over **300 characters**. Advisory
+  (never blocks, never edits), silent on non-`status.md` writes and in projects with no `knowledge/`
+  tree, budget overridable via `ARWYL_STATUS_ENTRY_BUDGET`. Registered in `hooks/hooks.json`
+  alongside `SessionStart`. Verified end-to-end on 2026-07-29 (Claude Code 2.1.220): the hook fires
+  on the `Edit|Write|MultiEdit` matcher and its `hookSpecificOutput.additionalContext` does reach the
+  model — piping JSON at the script only proves the parser, not the harness contract, so prove the
+  fire before trusting any future hook.
+
+  **This repo wires it from `.claude/settings.json` pointing at the working copy**
+  (`$CLAUDE_PROJECT_DIR/claude_code/hooks/status-budget.sh`), not the plugin cache — same dogfooding
+  reason as the status line, so edits are testable without a version bump. `status-budget.sh` resolves
+  its python script relative to `$0` rather than `$CLAUDE_PLUGIN_ROOT` precisely so both invocation
+  paths work; consumers get it via the plugin with no settings change.
+- **`.githooks/pre-commit`** — the `AGENTS.md` character budget (dev-side, this repo only; not
+  shipped payload — a plugin cannot install a git hook).
+
+Budgets are stated in **characters, not lines** — a line count is not checkable under hard wrapping.
 
 ## Memory discipline
 

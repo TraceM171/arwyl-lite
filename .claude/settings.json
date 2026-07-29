@@ -1,5 +1,18 @@
 {
   "enabledPlugins": {
     "arwyl-lite@arwyl-lite-marketplace": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/claude_code/hooks/status-budget.sh\""
+          }
+        ]
+      }
+    ]
   }
 }

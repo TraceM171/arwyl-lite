@@ -1,6 +1,6 @@
 # Status — Current State
 
-**As of 2026-07-17.**
+**As of 2026-07-29.**
 
 ## Current version
 
@@ -8,14 +8,15 @@
 
 (The push to get `0.1.7` out briefly failed — SSH agent couldn't sign with the hardware key, "agent refused operation" — retried clean once the key was touched; every version since has pushed normally.)
 
-This machine's marketplace checkout and plugin cache were last refreshed to `0.1.13` (2026-07-16, `/plugin marketplace update` + `/reload-plugins`). **`0.1.14` and `0.1.15` are pushed but not yet pulled into the cache** — see Open.
+This machine's plugin cache is on `0.1.15` — confirmed behaviourally on 2026-07-29 (the field-test consumer's curate transcript loads the `0.1.15` cache path). The earlier claim that it was stuck at `0.1.13` was wrong; `installed_plugins.json`-style metadata is not evidence, see `stack.md`.
 
 ## Recent changes
 
+- **2026-07-29** — field study of a consumer's first curate pass: 6 findings, 7 rule fixes, and a new `PostToolUse` status-budget hook. `audit-2026-07-29-field-study-curate.md`, `decision-mechanism-over-prose.md`.
 - **`f4d5fcc`** — internal `field-study` skill (`.claude/skills/`, not shipped): study a consumer to find arwyl system gaps. `.claude/skills/field-study/SKILL.md`.
 - **`9541468`** — added the "Place for retrieval" rule (retrievability as a second placement axis, wired through AGENTS/reflect/curate). Preventive — `decision-retrievability.md`.
 - **`5b28d68`** — **Decision** added as a sixth kind, plus five rule fixes, all traced to one root cause in a field review. Bumped to 0.1.14. Why + rejected alternatives: `decision-taxonomy-kinds.md`.
-- **`6aca49d`** — curate: `_curated.md` marker changed from a bare date to a full UTC timestamp, and marker-stamping moved to after the pass's own commit (not before) — bare-date `git log --since` is midnight-inclusive and double-counted same-day pre-pass commits as drift; even a timestamp alone still let the pass's own closing commit count itself as drift the next time. Bumped to 0.1.13.
+- **`6aca49d`** — curate: `_curated.md` marker became a full UTC timestamp, stamped after the pass's own commit — both bare dates and same-commit stamping made a pass recount its own work as drift. Bumped to 0.1.13. `stack.md`.
 - **`3df49f2`** — statusline: curate's own knowledge edits no longer count toward the dirtiness/dup-risk trigger (mirrors the existing reflect-boundary exclusion). Bumped to 0.1.12.
 - **`b0471bd`** — statusline: dropped always-on dirty/changed baseline stats (nudge-only now), fixed read/edit % exceeding 100% after mid-session file renames/deletes. Bumped to 0.1.11.
 - **`efd5ed9`** — added "Open entries are pointers, not plans" (status/plan split, `phases.md`/`plan.md`) and de-biased infra-only examples across the rule docs. Bumped to 0.1.10.
@@ -31,6 +32,6 @@ This machine's marketplace checkout and plugin cache were last refreshed to `0.1
 
 ## Open
 
-- Refresh this machine's marketplace checkout + plugin cache to `0.1.15` (`/plugin marketplace update` + `/reload-plugins`; currently `0.1.13`) — owner will do this by hand.
+- Bump `plugin.json` to `0.1.16` and push — the 2026-07-29 rule fixes + status-budget hook do not reach any install until the version string changes (`stack.md`, version-bump-for-cache).
 - Restart Claude Code once to load the new internal `field-study` skill (first-time `.claude/skills/` dir; `/reload-plugins` won't do it) — owner, by hand.
 - This `knowledge/` tree itself is brand new (scaffolded 2026-07-10) — expect a `reflect`/`curate` pass to reshape it as real work accumulates. No domains yet, by design.

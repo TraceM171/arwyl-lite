@@ -171,8 +171,13 @@ The files at the top of the knowledge tree are the only ones read by every sessi
 - `requirements.md` — what the project is for and what it is not (optional)
 - `phases.md` — a cross-domain ordered plan (optional; created only when one exists — see "Open entries are pointers, not plans")
 - `stack.md` — the chosen tools, one line each, linking to the decision file for the reasoning (optional — see "Where the *why* lives" below)
+- `decision-<topic>.md` — a decision that constrains work in **more than one domain** (see below)
 
 If you find yourself adding a new top-level file, ask: **which domain does it belong to?** If the answer is "none, it's its own thing", the project probably needs a new domain, not a new top-level file.
+
+**Cross-cutting decisions live at top level. Domain-scoped ones do not.** The test is scope, not importance: *does this choice constrain work in more than one domain?* A rule like "everything runs as a container" or "every service authenticates through the central IdP" is checked by whoever touches services, infrastructure, *and* security — it belongs at top level, where every session's index read reaches it. A rule like "this domain's backups use retention policy X" governs one domain and belongs in it.
+
+Getting this wrong buries the constraint. Filing a project-wide decision inside "the closest domain" makes it reachable only by domain navigation — and by definition, the tasks it constrains are mostly in *other* domains, whose readers never navigate there. That is precisely the burial "Place for retrieval, not just for kind" (below) exists to prevent, so the two rules must agree: a decision that governs everywhere gets a home everyone reads.
 
 ### Cross-cutting knowledge that has no domain
 
@@ -255,6 +260,8 @@ The model links to both. A reader asking "how does this work?" should not have t
 
 If a file cannot be summarized in one sentence, it is doing too much. Split it. A 500-line file titled "infrastructure" probably contains facts about the host, the network, the storage, *and* per-instance operations — those are different domains and different files.
 
+**This rule governs *living* files — models, patterns, indexes, decisions, `status.md`.** It does not govern a closed dated record. The failure it prevents is the file that *grows by appending*, and a closed `audit-`/`incident-`/`deploy-`/`upgrade-` file cannot grow — it is append-only and already closed. Splitting one rewrites frozen history to buy navigability, which contradicts "Dated files are append-only" below. A long dated record is not a defect; if it is hard to navigate, give it headings. Size is a signal about files that are still accumulating, and a closed record is not one of them.
+
 ### Link, do not restate
 
 When a fact in one file is relevant to another, link to the canonical source. Do not copy the text across files. Restated text drifts; links do not.
@@ -282,9 +289,13 @@ That is the write-side. Its read-side complement lives in the consultation contr
 
 ### Recent-changes entries are pointers, not records
 
-A `status.md` "recent changes" entry is **at most two lines and ends with a link**: what changed, and where the full record lives. It is not the record itself.
+A `status.md` "recent changes" entry is **at most 300 characters and ends with a link**: what changed, and where the full record lives. It is not the record itself.
 
-This is a hard budget, not a style preference, because it is the single most-violated rule in practice — the pressure to "just add the context here while I'm writing it" is present in every session, and it is exactly how `status.md` becomes a changelog nobody can read. **Two lines. Ends with a link. No exceptions for important changes** — importance is an argument for writing the record properly somewhere else, not for a bigger status entry.
+**Characters, not lines** — a line count is not a budget you can check. Hard-wrapped markdown turns one sentence plus a link into three physical lines, so "two lines" means different things to the writer, to the reviewer, and to the next pass, and every one of them re-litigates it. 300 characters of entry text (the whole entry, newlines collapsed to spaces) is unambiguous, wrap-independent, and countable. It is calibrated, not guessed: measured against a real consumer's 96-entry `status.md`, well-formed entries ran 74–272 characters while every entry a `reflect` pass had to trim ran 321–439 — an empty gap between the two populations, with 300 sitting in it.
+
+This is a hard budget, not a style preference, because it is the single most-violated rule in practice — the pressure to "just add the context here while I'm writing it" is present in every session, and it is exactly how `status.md` becomes a changelog nobody can read. **300 characters. Ends with a link. No exceptions for important changes** — importance is an argument for writing the record properly somewhere else, not for a bigger status entry.
+
+Knowing the rule is not sufficient and never has been: it is violated by writers who read it earlier in the same session, because the write happens under task pressure far from the reading. Count the entry when you write it. If the plugin's `knowledge-status-budget` hook is active it will count for you, at the moment of the write.
 
 What does *not* go in a status entry, ever: root cause, evidence, what was tried, verification steps, next steps, security narrative, rationale. Each of those has a home:
 
@@ -295,7 +306,7 @@ What does *not* go in a status entry, ever: root cause, evidence, what was tried
 | How it's configured now | the per-X file |
 | What to do next | `status.md` **Open** (one line) or a plan file |
 
-If you cannot say it in two lines, the record is missing — go write it, then link to it. A status entry that has grown into a paragraph is a sign the fact was captured in the wrong place, not that `status.md` needed a bigger entry.
+If you cannot say it in 300 characters, the record is missing — go write it, then link to it. A status entry that has grown into a paragraph is a sign the fact was captured in the wrong place, not that `status.md` needed a bigger entry.
 
 **Ordering:** newest first, strictly. An entry inserted out of order is invisible — readers scan until the dates stop being new and stop there.
 
@@ -386,7 +397,7 @@ A restructuring is the wrong time to:
 | Patterns are recipes, not design | Models that conflate "what" with "how" |
 | No duplication; link, do not restate | Two files claiming to be the truth |
 | Place for retrieval: link cross-cutting constraints from a guaranteed-read file and/or the task sites they govern; keep the mandatory files short | Correctly-filed facts that go unread at the moment they apply |
-| Recent-changes entries: max 2 lines, ends with a link, newest first | `status.md` bloating into a de facto changelog/audit |
+| Recent-changes entries: max 300 characters, ends with a link, newest first | `status.md` bloating into a de facto changelog/audit |
 | Open entries are pointers, not plans | `status.md`/backlogs silently absorbing multi-step, multi-session initiatives |
 | Top-level is cross-cutting only | Top-level becomes a junk drawer |
 | Per-X convention for collections of instances | The mega-file-that-grows failure mode |

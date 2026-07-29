@@ -15,7 +15,7 @@ file and/or the task sites it governs; the mandatory files stay short — pointe
   unreachable at the moment it applies. The link is the only bridge for a fact whose trigger lies
   outside its own domain.
 - **Honesty note — this is preventive, not failure-driven.** A synthetic test
-  (`audit-2026-07-retrievability-burial-test.md`, 2026-07-17) built to reproduce this burial did
+  (`audit-2026-07-17-retrievability-burial-test.md`, 2026-07-17) built to reproduce this burial did
   **not** reproduce it: capture caught the aside, retrieval fired 4/4. The change targets the
   scale/distance regime the test could not reach, and makes explicit an instinct `reflect` already
   showed (it filed a cross-cutting preference into a mandatory-read file unprompted). This is the
@@ -36,5 +36,5 @@ file and/or the task sites it governs; the mandatory files stay short — pointe
 
 ## Deliberation
 
-- `audit-2026-07-retrievability-burial-test.md` — the test design, results, and why it did not
+- `audit-2026-07-17-retrievability-burial-test.md` — the test design, results, and why it did not
   reproduce the burial it targeted.

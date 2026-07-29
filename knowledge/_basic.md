@@ -12,7 +12,9 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `stack.md` | distribution and design mechanics — what we use and how it works |
 | `decision-taxonomy-kinds.md` | the six kinds — why, and the alternatives rejected |
 | `decision-retrievability.md` | retrievability as a second placement axis — why (preventive) |
-| `audit-2026-07-retrievability-burial-test.md` | the burial test: design, results, why it didn't reproduce |
+| `decision-mechanism-over-prose.md` | when a rule gets a mechanism instead of more wording — why, and the bar |
+| `audit-2026-07-17-retrievability-burial-test.md` | the burial test: design, results, why it didn't reproduce |
+| `audit-2026-07-29-field-study-curate.md` | field study of a consumer's first curate pass: 6 findings, what worked |
 | `status.md` | current version, recent changes, open items |
 | `.local/_basic.md` | owner-specific context |
 
@@ -29,4 +31,13 @@ The product is `claude_code/` — the payload other projects install (as a Claud
 
 ## Philosophy
 
-Design-first, and every rule added to `KNOWLEDGE_ORG.md` / `AGENTS.md` has come from a concrete failure mode observed in a real consumer, not from speculative design — with one deliberate exception: the "Place for retrieval" rule (2026-07-17) was added from a design-gap analysis *after* a synthetic test failed to reproduce the burial it targeted. See `decision-retrievability.md` for why that exception was made, and `status.md`'s "Recent changes" for the latest examples.
+Design-first, and rules are added from concrete failure modes observed in a real consumer, not from speculative design. Most are: see `decision-taxonomy-kinds.md` and `audit-2026-07-29-field-study-curate.md`.
+
+Three deliberate departures, each recorded rather than blurred:
+
+- **"Place for retrieval" (2026-07-17)** — added from design-gap analysis *after* a synthetic test failed to reproduce the burial it targeted. `decision-retrievability.md`.
+- **The frozen-file exemption to the mega-file rule, and the top-level home for cross-cutting decisions (2026-07-29)** — the consumer did the right thing in both cases and the rules were simply silent on it. These document existing correct practice rather than correct an observed failure; the risk they address (the next pass re-litigating, or a different consumer guessing wrong) is reasoned, not measured.
+
+Where the bar *was* met, it is now met harder: the 2026-07-29 contradiction prohibition was traced to an observed fabrication, then A/B-tested against controls before shipping — the first rule here validated by reproducing its failure first. See `audit-2026-07-29-field-study-curate.md`.
+
+**And where prose is the wrong instrument, a rule is not the answer at all** — `decision-mechanism-over-prose.md`.
