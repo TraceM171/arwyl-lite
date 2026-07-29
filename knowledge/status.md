@@ -4,7 +4,7 @@
 
 ## Current version
 
-`0.1.15` (`claude_code/.claude-plugin/plugin.json`), pushed to `origin/main` (`9541468`). Marketplace: `arwyl-lite-marketplace` → GitHub `TraceM171/arwyl-lite`.
+`0.1.16` (`claude_code/.claude-plugin/plugin.json`). Marketplace: `arwyl-lite-marketplace` → GitHub `TraceM171/arwyl-lite`.
 
 (The push to get `0.1.7` out briefly failed — SSH agent couldn't sign with the hardware key, "agent refused operation" — retried clean once the key was touched; every version since has pushed normally.)
 
@@ -12,6 +12,7 @@ This machine's plugin cache is on `0.1.15` — confirmed behaviourally on 2026-0
 
 ## Recent changes
 
+- **2026-07-29** — bumped to `0.1.16` to ship the field-study rule fixes + status-budget hook (previously landed at `0.1.15` but not version-bumped, so no install picked them up).
 - **2026-07-29** — field study of a consumer's first curate pass: 6 findings, 7 rule fixes, and a new `PostToolUse` status-budget hook. `audit-2026-07-29-field-study-curate.md`, `decision-mechanism-over-prose.md`.
 - **`f4d5fcc`** — internal `field-study` skill (`.claude/skills/`, not shipped): study a consumer to find arwyl system gaps. `.claude/skills/field-study/SKILL.md`.
 - **`9541468`** — added the "Place for retrieval" rule (retrievability as a second placement axis, wired through AGENTS/reflect/curate). Preventive — `decision-retrievability.md`.
@@ -32,6 +33,5 @@ This machine's plugin cache is on `0.1.15` — confirmed behaviourally on 2026-0
 
 ## Open
 
-- Bump `plugin.json` to `0.1.16` and push — the 2026-07-29 rule fixes + status-budget hook do not reach any install until the version string changes (`stack.md`, version-bump-for-cache).
 - Restart Claude Code once to load the new internal `field-study` skill (first-time `.claude/skills/` dir; `/reload-plugins` won't do it) — owner, by hand.
 - This `knowledge/` tree itself is brand new (scaffolded 2026-07-10) — expect a `reflect`/`curate` pass to reshape it as real work accumulates. No domains yet, by design.
