@@ -16,7 +16,7 @@ claude
 
 (Testing a local clone before pushing? Use the local path instead: `/plugin marketplace add ~/agents-template`.)
 
-Installs the `reflect`, `curate`, `handoff`, and `knowledge-org` skills, plus a `SessionStart` hook. The install prompt asks for a scope — pick **project** (writes to that repo's `.claude/settings.json`, committed, shared with collaborators) if you only want this active in specific repos; **user** installs it globally across every project you open.
+Installs the `reflect`, `curate`, and `knowledge-org` skills, plus a `SessionStart` hook. The install prompt asks for a scope — pick **project** (writes to that repo's `.claude/settings.json`, committed, shared with collaborators) if you only want this active in specific repos; **user** installs it globally across every project you open.
 
 Either way, the hook only acts in projects that already have a `knowledge/` directory — it's a complete no-op everywhere else, so a global install won't inject anything or create files in unrelated repos. To adopt the template in a project:
 
@@ -44,6 +44,18 @@ ln -s AGENTS.md CLAUDE.md
 ```
 
 That's it. The agent will read the knowledge files on first start and follow the organization rules.
+
+### Arwyl Extras (independent of the above)
+
+A sibling plugin, `arwyl-extras`, ships capabilities with no dependency on the knowledge-tree system or on `arwyl-lite` being installed — see `knowledge/decision-plugin-split.md` for why they're separate. Install it on its own:
+
+```bash
+claude
+/plugin marketplace add TraceM171/arwyl-lite
+/plugin install arwyl-extras@arwyl-lite-marketplace
+```
+
+Currently ships the `handoff` skill (below). No manual/symlink install path — plugin only.
 
 ## Knowledge Structure
 
@@ -146,18 +158,9 @@ Then in `~/.claude/settings.json` (either way):
 
 ## Handoff Skill
 
-Generate a copy-pasteable handoff prompt summarizing the current session for the next one. Included in the Claude Code plugin (Option A above).
+Generate a copy-pasteable handoff prompt summarizing the current session for the next one. Ships in the `arwyl-extras` plugin (see "Arwyl Extras" above), not `arwyl-lite` — it reads `@knowledge/*` pointers when a knowledge tree exists but doesn't require one. Plugin only, no manual/symlink install path.
 
-**Manual setup:**
-```bash
-# Claude Code
-mkdir -p .claude/skills/handoff
-ln ~/agents-template/claude_code/handoff.md .claude/skills/handoff/SKILL.md
-
-# OpenCode
-mkdir -p .opencode/skills/handoff
-ln ~/agents-template/claude_code/handoff.md .opencode/skills/handoff/SKILL.md
-```
+**Use:** Say "handoff" or "wrap up" or use the skill tool to invoke it.
 
 ## Development
 
@@ -166,5 +169,3 @@ ln ~/agents-template/claude_code/handoff.md .opencode/skills/handoff/SKILL.md
 ```bash
 git config core.hooksPath .githooks
 ```
-
-**Use:** Say "handoff" or "wrap up" or use the skill tool to invoke it.

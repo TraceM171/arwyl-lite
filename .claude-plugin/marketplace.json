@@ -8,7 +8,12 @@
     {
       "name": "arwyl-lite",
       "source": "./claude_code",
-      "description": "Knowledge-tree conventions, reflect/curate/handoff skills, and a status line for Claude Code."
+      "description": "Knowledge-tree conventions, reflect/curate/knowledge-org skills, and a status line for Claude Code."
+    },
+    {
+      "name": "arwyl-extras",
+      "source": "./arwyl-extras",
+      "description": "Standalone Claude Code extras with no dependency on arwyl-lite: the handoff skill."
     }
   ]
 }

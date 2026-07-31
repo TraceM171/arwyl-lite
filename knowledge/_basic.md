@@ -1,6 +1,6 @@
 # Arwyl Lite — Knowledge Base Index
 
-Arwyl Lite is structured knowledge-tree conventions and Claude Code tooling for agent-assisted development: a six-kinds taxonomy (index / status / model / decision / audit / pattern) plus a per-X convention for organizing a project's `knowledge/` tree, packaged as a Claude Code plugin — skills `reflect`, `curate`, `handoff`, `knowledge-org`; a `SessionStart` hook; a status line script.
+Arwyl Lite is structured knowledge-tree conventions and Claude Code tooling for agent-assisted development: a six-kinds taxonomy (index / status / model / decision / audit / pattern) plus a per-X convention for organizing a project's `knowledge/` tree, packaged as a Claude Code plugin — skills `reflect`, `curate`, `knowledge-org`; a `SessionStart` hook; a status line script. A sibling plugin, `arwyl-extras` (`arwyl-extras/`), ships capabilities with no knowledge-tree dependency, starting with the `handoff` skill — see `decision-plugin-split.md`.
 
 For current state, see `status.md`. For distribution and design mechanics, see `stack.md`; for a choice still in force and why, see the `decision-*.md` files. No domain subdirectories yet — flat structure, by design, until enough content accumulates to justify one (per `KNOWLEDGE_ORG.md`'s "choosing domains") — the first candidate is a `consumers/` per-X domain, once there's a second consumer or tool integration.
 
@@ -13,6 +13,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `decision-taxonomy-kinds.md` | the six kinds — why, and the alternatives rejected |
 | `decision-retrievability.md` | retrievability as a second placement axis — why (preventive) |
 | `decision-mechanism-over-prose.md` | when a rule gets a mechanism instead of more wording — why, and the bar |
+| `decision-plugin-split.md` | why `handoff` (and secret-capture, in progress) live in `arwyl-extras`, not `arwyl-lite` |
 | `audit-2026-07-17-retrievability-burial-test.md` | the burial test: design, results, why it didn't reproduce |
 | `audit-2026-07-29-field-study-curate.md` | field study of a consumer's first curate pass: 6 findings, what worked |
 | `status.md` | current version, recent changes, open items |
@@ -27,7 +28,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 
 ## What this project is
 
-The product is `claude_code/` — the payload other projects install (as a Claude Code plugin, or via manual symlinks; see root `README.md`). This `knowledge/` tree is Arwyl Lite dogfooding its own conventions on itself — it is not the product.
+The product is `claude_code/` (plugin `arwyl-lite`) and `arwyl-extras/` (plugin `arwyl-extras`) — two independently installable payloads other projects consume, both from the same `arwyl-lite-marketplace` (see root `README.md`; why two, `decision-plugin-split.md`). This `knowledge/` tree is Arwyl Lite dogfooding its own conventions on itself — it is not the product.
 
 ## Philosophy
 

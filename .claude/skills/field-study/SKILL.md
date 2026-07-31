@@ -35,7 +35,7 @@ A gap is only a gap *relative to the current design*. Before calling something a
 
 You are judging the consumer against what arwyl prescribes *today*. Load, from this repo:
 
-- `claude_code/KNOWLEDGE_ORG.md`, `claude_code/AGENTS.md`, and the skill files (`reflect.md`, `curate.md`, `handoff.md`) — the rules and workflows the consumer's agents were meant to follow.
+- `claude_code/KNOWLEDGE_ORG.md`, `claude_code/AGENTS.md`, and the skill files (`reflect.md`, `curate.md`, `arwyl-extras/skills/handoff/SKILL.md`) — the rules and workflows the consumer's agents were meant to follow.
 - `knowledge/status.md` and `knowledge/decision-*.md` — the current design decisions and their rationale, so you don't re-flag something already decided or re-open a settled choice.
 
 ### 2. Establish the consumer's baseline

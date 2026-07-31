@@ -12,6 +12,9 @@ This machine's plugin cache is on `0.1.15` — confirmed behaviourally on 2026-0
 
 ## Recent changes
 
+- **2026-07-31** — split `handoff` out of `arwyl-lite` into a new sibling plugin `arwyl-extras`
+  (`arwyl-extras/`, marketplace entry added), version `0.1.0`; `arwyl-lite` bumped to `0.1.17` for the
+  removal. A secret-capture skill is in progress for the same new plugin. `decision-plugin-split.md`.
 - **2026-07-29** — bumped to `0.1.16` to ship the field-study rule fixes + status-budget hook (previously landed at `0.1.15` but not version-bumped, so no install picked them up).
 - **2026-07-29** — field study of a consumer's first curate pass: 6 findings, 7 rule fixes, and a new `PostToolUse` status-budget hook. `audit-2026-07-29-field-study-curate.md`, `decision-mechanism-over-prose.md`.
 - **`f4d5fcc`** — internal `field-study` skill (`.claude/skills/`, not shipped): study a consumer to find arwyl system gaps. `.claude/skills/field-study/SKILL.md`.
@@ -33,5 +36,16 @@ This machine's plugin cache is on `0.1.15` — confirmed behaviourally on 2026-0
 
 ## Open
 
+- Verify the two-plugin marketplace layout actually works before building further on `arwyl-extras`:
+  add the local marketplace path (or `/plugin marketplace update` once pushed), install
+  `arwyl-extras@arwyl-lite-marketplace` alongside `arwyl-lite@arwyl-lite-marketplace`, restart, confirm
+  the `handoff` skill still fires from the new plugin. `decision-plugin-split.md`.
+- Build the secret-capture skill in `arwyl-extras`: an out-of-band OS-dialog prompt (proven viable via
+  `zenity` on Wayland, 2026-07-31 — not yet proven on macOS/Windows or in a no-display session, which
+  must refuse cleanly rather than hang/fall through to stdin) that saves the value to a scratch file
+  Claude references by path and never reads, plus a cleanup step. Whether a "warn on exposure" guard hook
+  ships alongside it is still undecided — flagged risks: it would need the plaintext readable from disk
+  for the whole checkout window (wider exposure than today's manual flow), a static (never
+  value-interpolated) deny reason, and a minimum-length floor to avoid false-positiving on short values.
 - Restart Claude Code once to load the new internal `field-study` skill (first-time `.claude/skills/` dir; `/reload-plugins` won't do it) — owner, by hand.
 - This `knowledge/` tree itself is brand new (scaffolded 2026-07-10) — expect a `reflect`/`curate` pass to reshape it as real work accumulates. No domains yet, by design.
