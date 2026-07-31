@@ -16,6 +16,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `decision-plugin-split.md` | why `handoff` (and secret-capture, in progress) live in `arwyl-extras`, not `arwyl-lite` |
 | `audit-2026-07-17-retrievability-burial-test.md` | the burial test: design, results, why it didn't reproduce |
 | `audit-2026-07-29-field-study-curate.md` | field study of a consumer's first curate pass: 6 findings, what worked |
+| `audit-2026-07-31-arwyl-extras-symlink.md` | `arwyl-extras` shipped an empty `handoff` skill — a `git mv`'d symlink, not content |
 | `status.md` | current version, recent changes, open items |
 | `.local/_basic.md` | owner-specific context |
 

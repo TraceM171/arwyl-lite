@@ -1,7 +1,4 @@
 {
-  "enabledPlugins": {
-    "arwyl-lite@arwyl-lite-marketplace": true
-  },
   "hooks": {
     "PostToolUse": [
       {
@@ -14,5 +11,9 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "arwyl-lite@arwyl-lite-marketplace": true,
+    "arwyl-extras@arwyl-lite-marketplace": true
   }
 }

@@ -4,14 +4,20 @@
 
 ## Current version
 
-`0.1.16` (`claude_code/.claude-plugin/plugin.json`). Marketplace: `arwyl-lite-marketplace` → GitHub `TraceM171/arwyl-lite`.
+`arwyl-lite` `0.1.17` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.1.1`
+(`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
+`TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
 (The push to get `0.1.7` out briefly failed — SSH agent couldn't sign with the hardware key, "agent refused operation" — retried clean once the key was touched; every version since has pushed normally.)
 
-This machine's plugin cache is on `0.1.15` — confirmed behaviourally on 2026-07-29 (the field-test consumer's curate transcript loads the `0.1.15` cache path). The earlier claim that it was stuck at `0.1.13` was wrong; `installed_plugins.json`-style metadata is not evidence, see `stack.md`.
+This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17` and `arwyl-extras` `0.1.1` (both
+reinstalled 2026-07-31 after the fix below). `installed_plugins.json`-style metadata is not reliable
+evidence of a consumer's actual version, see `stack.md` — trust the cache path or behavioural evidence.
 
 ## Recent changes
 
+- **2026-07-31** — `arwyl-extras`' `handoff` shipped empty (dangling symlink from the split); fixed,
+  bumped to `0.1.1`. `audit-2026-07-31-arwyl-extras-symlink.md`.
 - **2026-07-31** — split `handoff` out of `arwyl-lite` into a new sibling plugin `arwyl-extras`
   (`arwyl-extras/`, marketplace entry added), version `0.1.0`; `arwyl-lite` bumped to `0.1.17` for the
   removal. A secret-capture skill is in progress for the same new plugin. `decision-plugin-split.md`.
