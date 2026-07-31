@@ -65,10 +65,8 @@ organized.
 - `arwyl-lite`'s own version bumped to `0.1.17` for the removal alone, even though nothing about
   knowledge-tree conventions changed — a plugin's shipped skill set changed, which is a version-bump
   event per `stack.md` regardless of cause.
-- Verified end-to-end 2026-07-31, twice: two `source` entries under one marketplace both install and
-  register cleanly (`audit-2026-07-31-arwyl-extras-symlink.md` covers the one real bug hit along the
-  way), and again for `0.2.0` after `secret-capture` shipped — both skills confirmed by real invocation,
-  not just presence in the skill listing.
+- Verified end-to-end 2026-07-31, twice (once per skill shipped) — current state in `status.md`, the one
+  real bug hit along the way in `audit-2026-07-31-arwyl-extras-symlink.md`.
 
 ## Deliberation
 

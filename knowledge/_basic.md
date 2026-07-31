@@ -14,9 +14,11 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `decision-retrievability.md` | retrievability as a second placement axis — why (preventive) |
 | `decision-mechanism-over-prose.md` | when a rule gets a mechanism instead of more wording — why, and the bar |
 | `decision-plugin-split.md` | why `handoff` and `secret-capture` live in `arwyl-extras`, not `arwyl-lite` |
+| `decision-secret-capture-scope.md` | why `secret-capture` has no guard hook and no MCP-tool interface (yet) |
 | `audit-2026-07-17-retrievability-burial-test.md` | the burial test: design, results, why it didn't reproduce |
 | `audit-2026-07-29-field-study-curate.md` | field study of a consumer's first curate pass: 6 findings, what worked |
 | `audit-2026-07-31-arwyl-extras-symlink.md` | `arwyl-extras` shipped an empty `handoff` skill — a `git mv`'d symlink, not content |
+| `audit-2026-07-31-capture-secret-cleanup-bug.md` | `set -e` silently skipped `capture-secret.sh`'s cleanup on every non-happy-path exit |
 | `status.md` | current version, recent changes, open items |
 | `.local/_basic.md` | owner-specific context |
 

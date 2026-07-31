@@ -18,8 +18,8 @@ consumer's actual version, see `stack.md` — trust the cache path or behavioura
 ## Recent changes
 
 - **2026-07-31** — shipped `secret-capture` in `arwyl-extras` (`0.1.1` → `0.2.0`): OS-dialog capture
-  script + cleanup script + `Stop`-hook sweep backstop, no guard hook yet (deferred by choice, not
-  default). `arwyl-extras/skills/secret-capture/SKILL.md`, `decision-plugin-split.md`.
+  script + cleanup script + `Stop`-hook sweep backstop. `SKILL.md`, `decision-secret-capture-scope.md`,
+  `audit-2026-07-31-capture-secret-cleanup-bug.md`.
 - **2026-07-31** — `arwyl-extras`' `handoff` shipped empty (dangling symlink from the split); fixed,
   bumped to `0.1.1`. `audit-2026-07-31-arwyl-extras-symlink.md`.
 - **2026-07-31** — split `handoff` out of `arwyl-lite` into a new sibling plugin `arwyl-extras`
@@ -48,8 +48,6 @@ consumer's actual version, see `stack.md` — trust the cache path or behavioura
 
 - `secret-capture`'s macOS (`osascript`) and Windows dialog paths are unverified — only the Linux
   X11/Wayland `zenity` path has a real end-to-end test. Confirm or fix when either platform is next used.
-- The "warn on exposure" guard hook was deliberately deferred, not built — owner chose capture+cleanup
-  only for this first version. Revisit only with a concrete plan for its flagged risks (plaintext
-  readable on disk for the whole checkout window, a static non-interpolated deny reason, a minimum-length
-  floor against false positives on short values) — see `decision-plugin-split.md`.
+- `secret-capture` deliberately ships without a guard hook or an MCP-tool interface — both are scope
+  choices with stated revisit triggers, not unfinished work. `decision-secret-capture-scope.md`.
 - This `knowledge/` tree itself is brand new (scaffolded 2026-07-10) — expect a `reflect`/`curate` pass to reshape it as real work accumulates. No domains yet, by design.
