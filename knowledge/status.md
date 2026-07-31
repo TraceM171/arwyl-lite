@@ -4,19 +4,27 @@
 
 ## Current version
 
-`arwyl-lite` `0.1.17` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.0`
+`arwyl-lite` `0.1.17` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.2`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
 (The push to get `0.1.7` out briefly failed — SSH agent couldn't sign with the hardware key, "agent refused operation" — retried clean once the key was touched; every version since has pushed normally.)
 
-This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17` and `arwyl-extras` `0.2.0` — both
-skills (`handoff`, `secret-capture`) verified by real invocation from the actual cache path, not just
-presence in the skill listing. `installed_plugins.json`-style metadata is not reliable evidence of a
-consumer's actual version, see `stack.md` — trust the cache path or behavioural evidence.
+This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17`. `arwyl-extras`' cache is still `0.2.0`
+— `0.2.1`/`0.2.2` are pushed but not yet reinstalled here; their changes were verified by running the
+working-copy scripts directly (real dialogs, real captures), not through the plugin cache path. Reinstall
+and re-verify from the cache before calling `0.2.2` field-ready. `installed_plugins.json`-style metadata
+is not reliable evidence of a consumer's actual version, see `stack.md` — trust the cache path or
+behavioural evidence.
 
 ## Recent changes
 
+- **2026-07-31** — `secret-capture` dialog now takes separate what/why arguments, both shown to the user;
+  fixed `zenity --password` silently ignoring custom `--text` (switched to `--entry --hide-text`, the
+  dialog type that actually renders it). `0.2.1` → `0.2.2`.
+- **2026-07-31** — first real-consumer use (sanctum) hit a categorical auto-mode classifier deny on
+  `secret-capture`'s invocation; confirmed working under manual mode. `0.2.0` → `0.2.1`.
+  `audit-2026-07-31-secret-capture-auto-mode-block.md`.
 - **2026-07-31** — shipped `secret-capture` in `arwyl-extras` (`0.1.1` → `0.2.0`): OS-dialog capture
   script + cleanup script + `Stop`-hook sweep backstop. `SKILL.md`, `decision-secret-capture-scope.md`,
   `audit-2026-07-31-capture-secret-cleanup-bug.md`.
@@ -46,8 +54,14 @@ consumer's actual version, see `stack.md` — trust the cache path or behavioura
 
 ## Open
 
+- Reinstall `arwyl-extras` to `0.2.2` on this machine and this session's own sanctum test bed, then
+  re-verify `secret-capture` from the actual cache path (the `0.2.1`/`0.2.2` fixes were only verified
+  against the working copy directly).
 - `secret-capture`'s macOS (`osascript`) and Windows dialog paths are unverified — only the Linux
   X11/Wayland `zenity` path has a real end-to-end test. Confirm or fix when either platform is next used.
 - `secret-capture` deliberately ships without a guard hook or an MCP-tool interface — both are scope
   choices with stated revisit triggers, not unfinished work. `decision-secret-capture-scope.md`.
+- `secret-capture` is categorically blocked by Claude Code's auto-mode classifier; confirmed working
+  under manual mode. Auto-mode-with-allowlist specifically is untested, not known to fail.
+  `audit-2026-07-31-secret-capture-auto-mode-block.md`.
 - This `knowledge/` tree itself is brand new (scaffolded 2026-07-10) — expect a `reflect`/`curate` pass to reshape it as real work accumulates. No domains yet, by design.

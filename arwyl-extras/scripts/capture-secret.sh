@@ -4,13 +4,21 @@
 # stdout/stderr, which is the one channel a caller's tool-call result can
 # see. Only a file path and byte count are ever printed.
 #
-# Usage: capture-secret.sh "<label describing what's being requested>"
+# Usage: capture-secret.sh "<what to paste>" "<why it's needed>"
 # Exit codes: 0 captured, 1 cancelled, 2 timed out, 3 no display server,
 # 4 no supported dialog tool found for this platform.
 set -uo pipefail
 
-LABEL="${1:-a secret}"
+WHAT="${1:-a secret}"
+WHY="${2:-no reason given}"
 TIMEOUT_SECS="${ARWYL_SECRET_CAPTURE_TIMEOUT:-180}"
+
+# Both values are attacker-uncontrolled (Claude-authored, not raw user input),
+# but escape anyway so an embedded quote can't break the dialog tool's own
+# argument boundary or, worse, an AppleScript string literal.
+escape_dq() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+WHAT_ESC="$(escape_dq "$WHAT")"
+WHY_ESC="$(escape_dq "$WHY")"
 
 if [ -d /dev/shm ] && [ -w /dev/shm ]; then
     OUT_DIR="/dev/shm/arwyl-secrets"
@@ -48,15 +56,23 @@ capture_linux() {
         return 3
     fi
     if have zenity; then
-        run_with_timeout zenity --password \
+        # zenity --password only accepts --password/--username and silently
+        # ignores --text (no error) — it always shows its own fixed "Type
+        # your password" template. --entry --hide-text is the dialog type
+        # that actually renders custom --text while still masking input.
+        run_with_timeout zenity --entry --hide-text \
             --title="Claude Code needs a secret" \
-            --text="Claude is requesting: ${LABEL}
+            --text="Please paste: ${WHAT_ESC}
+
+Why: ${WHY_ESC}
+
 This value is written directly to disk; Claude never sees it." \
             >"$OUT_FILE" 2>/dev/null || rc=$?
         return "$rc"
     fi
     if have kdialog; then
-        run_with_timeout kdialog --password "Claude is requesting: ${LABEL}" \
+        run_with_timeout kdialog --password "Please paste: ${WHAT_ESC}
+Why: ${WHY_ESC}" \
             >"$OUT_FILE" 2>/dev/null || rc=$?
         return "$rc"
     fi
@@ -67,7 +83,7 @@ capture_macos() {
     local rc=0
     have osascript || return 4
     run_with_timeout osascript \
-        -e "display dialog \"Claude is requesting: ${LABEL}\" default answer \"\" with hidden answer with title \"Claude Code needs a secret\"" \
+        -e "display dialog \"Please paste: ${WHAT_ESC} — Why: ${WHY_ESC}\" default answer \"\" with hidden answer with title \"Claude Code needs a secret\"" \
         -e "text returned of result" \
         >"$OUT_FILE" 2>/dev/null || rc=$?
     return "$rc"

@@ -19,6 +19,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `audit-2026-07-29-field-study-curate.md` | field study of a consumer's first curate pass: 6 findings, what worked |
 | `audit-2026-07-31-arwyl-extras-symlink.md` | `arwyl-extras` shipped an empty `handoff` skill — a `git mv`'d symlink, not content |
 | `audit-2026-07-31-capture-secret-cleanup-bug.md` | `set -e` silently skipped `capture-secret.sh`'s cleanup on every non-happy-path exit |
+| `audit-2026-07-31-secret-capture-auto-mode-block.md` | `secret-capture` categorically blocked under Claude Code auto mode; works under manual |
 | `status.md` | current version, recent changes, open items |
 | `.local/_basic.md` | owner-specific context |
 

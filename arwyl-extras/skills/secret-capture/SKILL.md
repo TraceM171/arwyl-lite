@@ -42,11 +42,15 @@ levels up from there, under `scripts/`. If the skill directory is
 `.../arwyl-extras/<version>/scripts/capture-secret.sh`.
 
 Run it as a **backgrounded** Bash call — the dialog can take longer than a synchronous tool-call window
-to be noticed and answered:
+to be noticed and answered. It takes two arguments, both shown to the user in the dialog itself:
 
 ```
-sh <plugin-root>/scripts/capture-secret.sh "<short label describing what you're requesting, e.g. 'JuiceFS object storage key'>"
+sh <plugin-root>/scripts/capture-secret.sh "<what to paste, e.g. 'JuiceFS object storage key'>" "<why it's needed, e.g. 'rotating the compromised key after the 07-31 incident'>"
 ```
+
+Make both specific enough that the user can tell at a glance, without needing to check back with you,
+exactly what value goes in the field and why you're asking for it right now — not "a secret" / "for the
+task." A vague label defeats the point of showing it in the dialog at all.
 
 Tell the user, in your own words, that a dialog should appear on their screen and to check for it if
 they don't notice one immediately (it can land on an inactive workspace or fail to steal focus).
@@ -60,7 +64,7 @@ never contains the secret itself:
 - `CANCELLED: ...` — the user closed or cancelled the dialog. Ask what they'd like to do instead; don't retry silently in a loop.
 - `TIMEOUT after <N>s, ...` — nobody answered in time. Same as cancelled: check in with the user.
 - `NO_DISPLAY: ...` or `UNSUPPORTED: ...` — the mechanism isn't available here. Fall back to the manual protocol (above) — don't retry, don't offer chat-paste.
-- **A tool-call denial from Claude Code's own permission/classifier layer** (not this script's own output — you won't even get one of the lines above; the `Bash` or `Skill` call itself comes back denied, e.g. "denied by the Claude Code auto mode classifier") — this is a fourth, categorically different failure mode. A script that pops a password dialog and captures keystrokes to disk looks, at the command-inspection level, like credential phishing; a general-purpose safety layer may not be able to tell this instance apart from that pattern. **Do not retry the same or a differently-shaped invocation** (a different tool, a different path, asking the user to approve again) — repeated attempts after a categorical deny is bypass behavior, not debugging. Stop, tell the user plainly what happened and why you're not retrying, and fall back to the manual protocol (above) unless and until the user resolves it on their end.
+- **A tool-call denial from Claude Code's own permission/classifier layer** (not this script's own output — you won't even get one of the lines above; the `Bash` or `Skill` call itself comes back denied, e.g. "denied by the Claude Code auto mode classifier") — this is a fourth, categorically different failure mode. **Confirmed 2026-07-31: this is auto-mode-specific.** The identical invocation is denied under auto mode — across a direct `Bash` call, after explicit user approval via `AskUserQuestion`, via the `Skill` tool's own documented path, and even for the meta-action of adding a `permissions.allow` entry for it — but succeeds normally under manual mode, no allowlist entry required. (Auto-mode-plus-allowlist specifically was never isolated as its own test — treat it as untested, not as known to fail.) A script that pops a password dialog and captures keystrokes to disk looks, at the command-inspection level, like credential phishing, which is the likely reason a general-purpose auto-mode safety layer can't tell this instance apart from that pattern. **Do not retry the same or a differently-shaped invocation** (a different tool, a different path, asking the user to approve again) — repeated attempts after a categorical deny is bypass behavior, not debugging. Stop and tell the user plainly: this needs *them* to switch out of auto mode for the capture step (not you working around it), or to fall back to the manual protocol (above) if they'd rather not switch modes.
 
 **Never call `Read`, `cat`, or any other content-inspecting tool on the captured path.** The only thing
 you're ever allowed to know about its contents is the byte count from step 1.
@@ -90,5 +94,5 @@ backstop, not a substitute for doing this explicitly.
 ## Important notes
 
 - One capture call gets you one value. Ask again for a second secret rather than trying to batch multiple values through one dialog.
-- The label you pass becomes dialog text the user reads — make it specific enough that they know exactly what they're typing (which service, which key), not generic ("a secret").
+- Both arguments become dialog text the user reads before typing anything — see step 1's specificity guidance.
 - If the user pastes a secret into chat unprompted, that's already transcript and rotation is the only real fix — don't pretend this skill can retroactively help; say so plainly.
