@@ -1,6 +1,6 @@
 # Status — Current State
 
-**As of 2026-07-29.**
+**As of 2026-07-31.**
 
 ## Current version
 
@@ -10,8 +10,9 @@
 
 (The push to get `0.1.7` out briefly failed — SSH agent couldn't sign with the hardware key, "agent refused operation" — retried clean once the key was touched; every version since has pushed normally.)
 
-This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17` and `arwyl-extras` `0.1.1` (`0.2.0` not
-yet reinstall-verified — see Open). `installed_plugins.json`-style metadata is not reliable evidence of a
+This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17` and `arwyl-extras` `0.2.0` — both
+skills (`handoff`, `secret-capture`) verified by real invocation from the actual cache path, not just
+presence in the skill listing. `installed_plugins.json`-style metadata is not reliable evidence of a
 consumer's actual version, see `stack.md` — trust the cache path or behavioural evidence.
 
 ## Recent changes
@@ -45,17 +46,10 @@ consumer's actual version, see `stack.md` — trust the cache path or behavioura
 
 ## Open
 
-- ~~Verify the two-plugin marketplace layout works~~ — done 2026-07-31: `arwyl-extras:handoff` installs,
-  registers, and runs correctly (after fixing the symlink incident,
-  `audit-2026-07-31-arwyl-extras-symlink.md`). Confirmed via a real invocation, full correct content
-  loaded from the `0.1.1` cache path.
-- Reinstall/verify `arwyl-extras` `0.2.0` end-to-end (same drill as `0.1.1`: marketplace update, install,
-  full restart, invoke) before treating `secret-capture` as field-ready.
 - `secret-capture`'s macOS (`osascript`) and Windows dialog paths are unverified — only the Linux
   X11/Wayland `zenity` path has a real end-to-end test. Confirm or fix when either platform is next used.
 - The "warn on exposure" guard hook was deliberately deferred, not built — owner chose capture+cleanup
   only for this first version. Revisit only with a concrete plan for its flagged risks (plaintext
   readable on disk for the whole checkout window, a static non-interpolated deny reason, a minimum-length
   floor against false positives on short values) — see `decision-plugin-split.md`.
-- Restart Claude Code once to load the new internal `field-study` skill (first-time `.claude/skills/` dir; `/reload-plugins` won't do it) — owner, by hand.
 - This `knowledge/` tree itself is brand new (scaffolded 2026-07-10) — expect a `reflect`/`curate` pass to reshape it as real work accumulates. No domains yet, by design.

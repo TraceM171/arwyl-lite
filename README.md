@@ -177,7 +177,7 @@ shouldn't need to ask for it by name.
 
 ## Development
 
-`claude_code/AGENTS.md` is inlined verbatim into the `SessionStart` hook's `additionalContext`, which Claude Code hard-caps at 10,000 characters (silent truncation past that, no error). A pre-commit hook blocks commits that push it over an 8,000-character budget. Enable it once per clone:
+`claude_code/AGENTS.md` is inlined verbatim into the `SessionStart` hook's `additionalContext`, which Claude Code hard-caps at 10,000 characters (silent truncation past that, no error). A pre-commit hook blocks commits that push it over an 8,800-character budget. Enable it once per clone:
 
 ```bash
 git config core.hooksPath .githooks
