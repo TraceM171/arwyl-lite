@@ -1,7 +1,7 @@
 {
   "name": "arwyl-extras",
   "displayName": "Arwyl Extras",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Standalone Claude Code extras with no dependency on arwyl-lite's knowledge-tree system: handoff and secret-capture skills.",
   "author": {
     "name": "TraceM171"

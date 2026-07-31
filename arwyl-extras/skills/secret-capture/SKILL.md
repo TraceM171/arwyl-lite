@@ -27,6 +27,11 @@ the script refuses cleanly (a labelled failure, not a hang) — when that happen
 manual protocol: tell the user to write the value themselves, out-of-band, in their own terminal/editor,
 and say "done" when finished. Never offer to accept the value pasted into chat as a fallback.
 
+Separately from whether the script itself works: even on a proven machine/platform, the *invocation* can
+be denied outright by Claude Code's own permission/classifier layer before the script ever runs — see the
+fourth bullet in step 2 below. That's a different problem from the mechanism not working, and needs a
+different response (stop and fall back, don't retry).
+
 ## Workflow
 
 ### 1. Invoke the capture script, in the background
@@ -55,6 +60,7 @@ never contains the secret itself:
 - `CANCELLED: ...` — the user closed or cancelled the dialog. Ask what they'd like to do instead; don't retry silently in a loop.
 - `TIMEOUT after <N>s, ...` — nobody answered in time. Same as cancelled: check in with the user.
 - `NO_DISPLAY: ...` or `UNSUPPORTED: ...` — the mechanism isn't available here. Fall back to the manual protocol (above) — don't retry, don't offer chat-paste.
+- **A tool-call denial from Claude Code's own permission/classifier layer** (not this script's own output — you won't even get one of the lines above; the `Bash` or `Skill` call itself comes back denied, e.g. "denied by the Claude Code auto mode classifier") — this is a fourth, categorically different failure mode. A script that pops a password dialog and captures keystrokes to disk looks, at the command-inspection level, like credential phishing; a general-purpose safety layer may not be able to tell this instance apart from that pattern. **Do not retry the same or a differently-shaped invocation** (a different tool, a different path, asking the user to approve again) — repeated attempts after a categorical deny is bypass behavior, not debugging. Stop, tell the user plainly what happened and why you're not retrying, and fall back to the manual protocol (above) unless and until the user resolves it on their end.
 
 **Never call `Read`, `cat`, or any other content-inspecting tool on the captured path.** The only thing
 you're ever allowed to know about its contents is the byte count from step 1.
