@@ -13,7 +13,7 @@
     {
       "name": "arwyl-extras",
       "source": "./arwyl-extras",
-      "description": "Standalone Claude Code extras with no dependency on arwyl-lite: the handoff skill."
+      "description": "Standalone Claude Code extras with no dependency on arwyl-lite: handoff and secret-capture skills."
     }
   ]
 }

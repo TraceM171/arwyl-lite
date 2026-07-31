@@ -4,23 +4,26 @@
 
 ## Current version
 
-`arwyl-lite` `0.1.17` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.1.1`
+`arwyl-lite` `0.1.17` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.0`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
 (The push to get `0.1.7` out briefly failed — SSH agent couldn't sign with the hardware key, "agent refused operation" — retried clean once the key was touched; every version since has pushed normally.)
 
-This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17` and `arwyl-extras` `0.1.1` (both
-reinstalled 2026-07-31 after the fix below). `installed_plugins.json`-style metadata is not reliable
-evidence of a consumer's actual version, see `stack.md` — trust the cache path or behavioural evidence.
+This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17` and `arwyl-extras` `0.1.1` (`0.2.0` not
+yet reinstall-verified — see Open). `installed_plugins.json`-style metadata is not reliable evidence of a
+consumer's actual version, see `stack.md` — trust the cache path or behavioural evidence.
 
 ## Recent changes
 
+- **2026-07-31** — shipped `secret-capture` in `arwyl-extras` (`0.1.1` → `0.2.0`): OS-dialog capture
+  script + cleanup script + `Stop`-hook sweep backstop, no guard hook yet (deferred by choice, not
+  default). `arwyl-extras/skills/secret-capture/SKILL.md`, `decision-plugin-split.md`.
 - **2026-07-31** — `arwyl-extras`' `handoff` shipped empty (dangling symlink from the split); fixed,
   bumped to `0.1.1`. `audit-2026-07-31-arwyl-extras-symlink.md`.
 - **2026-07-31** — split `handoff` out of `arwyl-lite` into a new sibling plugin `arwyl-extras`
   (`arwyl-extras/`, marketplace entry added), version `0.1.0`; `arwyl-lite` bumped to `0.1.17` for the
-  removal. A secret-capture skill is in progress for the same new plugin. `decision-plugin-split.md`.
+  removal. `decision-plugin-split.md`.
 - **2026-07-29** — bumped to `0.1.16` to ship the field-study rule fixes + status-budget hook (previously landed at `0.1.15` but not version-bumped, so no install picked them up).
 - **2026-07-29** — field study of a consumer's first curate pass: 6 findings, 7 rule fixes, and a new `PostToolUse` status-budget hook. `audit-2026-07-29-field-study-curate.md`, `decision-mechanism-over-prose.md`.
 - **`f4d5fcc`** — internal `field-study` skill (`.claude/skills/`, not shipped): study a consumer to find arwyl system gaps. `.claude/skills/field-study/SKILL.md`.
@@ -42,16 +45,17 @@ evidence of a consumer's actual version, see `stack.md` — trust the cache path
 
 ## Open
 
-- Verify the two-plugin marketplace layout actually works before building further on `arwyl-extras`:
-  add the local marketplace path (or `/plugin marketplace update` once pushed), install
-  `arwyl-extras@arwyl-lite-marketplace` alongside `arwyl-lite@arwyl-lite-marketplace`, restart, confirm
-  the `handoff` skill still fires from the new plugin. `decision-plugin-split.md`.
-- Build the secret-capture skill in `arwyl-extras`: an out-of-band OS-dialog prompt (proven viable via
-  `zenity` on Wayland, 2026-07-31 — not yet proven on macOS/Windows or in a no-display session, which
-  must refuse cleanly rather than hang/fall through to stdin) that saves the value to a scratch file
-  Claude references by path and never reads, plus a cleanup step. Whether a "warn on exposure" guard hook
-  ships alongside it is still undecided — flagged risks: it would need the plaintext readable from disk
-  for the whole checkout window (wider exposure than today's manual flow), a static (never
-  value-interpolated) deny reason, and a minimum-length floor to avoid false-positiving on short values.
+- ~~Verify the two-plugin marketplace layout works~~ — done 2026-07-31: `arwyl-extras:handoff` installs,
+  registers, and runs correctly (after fixing the symlink incident,
+  `audit-2026-07-31-arwyl-extras-symlink.md`). Confirmed via a real invocation, full correct content
+  loaded from the `0.1.1` cache path.
+- Reinstall/verify `arwyl-extras` `0.2.0` end-to-end (same drill as `0.1.1`: marketplace update, install,
+  full restart, invoke) before treating `secret-capture` as field-ready.
+- `secret-capture`'s macOS (`osascript`) and Windows dialog paths are unverified — only the Linux
+  X11/Wayland `zenity` path has a real end-to-end test. Confirm or fix when either platform is next used.
+- The "warn on exposure" guard hook was deliberately deferred, not built — owner chose capture+cleanup
+  only for this first version. Revisit only with a concrete plan for its flagged risks (plaintext
+  readable on disk for the whole checkout window, a static non-interpolated deny reason, a minimum-length
+  floor against false positives on short values) — see `decision-plugin-split.md`.
 - Restart Claude Code once to load the new internal `field-study` skill (first-time `.claude/skills/` dir; `/reload-plugins` won't do it) — owner, by hand.
 - This `knowledge/` tree itself is brand new (scaffolded 2026-07-10) — expect a `reflect`/`curate` pass to reshape it as real work accumulates. No domains yet, by design.

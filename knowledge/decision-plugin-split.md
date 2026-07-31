@@ -10,8 +10,9 @@ it turns out to need the knowledge tree after all.
 
 First move: the `handoff` skill (`arwyl-extras/skills/handoff/`, out of `claude_code/skills/handoff/`).
 It reads `@knowledge/*` pointers *when present* but does not require them — a project with no `knowledge/`
-tree still gets a useful handoff. Second, in progress: a secret-capture skill (asks the owner for a secret
-via an out-of-band OS dialog, never through a tool call Claude can read) — same test, same non-dependency.
+tree still gets a useful handoff. Second, shipped 2026-07-31: `secret-capture`
+(`arwyl-extras/skills/secret-capture/`) — asks the owner for a secret via an out-of-band OS dialog, never
+through a tool call Claude can read or write to. Same test, same non-dependency.
 
 ## Why (current reasoning)
 

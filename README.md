@@ -55,7 +55,7 @@ claude
 /plugin install arwyl-extras@arwyl-lite-marketplace
 ```
 
-Currently ships the `handoff` skill (below). No manual/symlink install path — plugin only.
+Currently ships the `handoff` and `secret-capture` skills (below). No manual/symlink install path — plugin only.
 
 ## Knowledge Structure
 
@@ -161,6 +161,19 @@ Then in `~/.claude/settings.json` (either way):
 Generate a copy-pasteable handoff prompt summarizing the current session for the next one. Ships in the `arwyl-extras` plugin (see "Arwyl Extras" above), not `arwyl-lite` — it reads `@knowledge/*` pointers when a knowledge tree exists but doesn't require one. Plugin only, no manual/symlink install path.
 
 **Use:** Say "handoff" or "wrap up" or use the skill tool to invoke it.
+
+## Secret Capture Skill
+
+Ships in `arwyl-extras`. Captures a brand-new secret (a freshly rotated/generated credential — not one
+that already exists in a file you can decrypt) directly from you via a native OS password dialog, so the
+value never enters the conversation transcript: Claude only ever sees a scratch-file path and a byte
+count, references it by path in downstream commands, and cleans it up afterward (plus a background sweep
+as a backstop). Proven end-to-end only on Linux with a live X11/Wayland session (`zenity`); the
+macOS/Windows dialog paths exist but are unverified. With no display server or no supported dialog tool,
+it refuses cleanly rather than hanging or falling back to asking you to paste the value into chat.
+
+**Use:** Claude invokes this itself when a task needs a secret it has no other way to obtain — you
+shouldn't need to ask for it by name.
 
 ## Development
 

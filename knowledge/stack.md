@@ -70,6 +70,11 @@ Some rules are enforced by machinery rather than prose — the choice, and when 
   paths work; consumers get it via the plugin with no settings change.
 - **`.githooks/pre-commit`** — the `AGENTS.md` character budget (dev-side, this repo only; not
   shipped payload — a plugin cannot install a git hook).
+- **`arwyl-extras/hooks/sweep-secrets.sh`** — `Stop` hook, shipped in `arwyl-extras` not `arwyl-lite`
+  (out of scope for this plugin's own conventions, in scope for that one's). Deletes anything left in the
+  `secret-capture` skill's scratch dirs after 10 minutes — a backstop for the skill's own instructed
+  cleanup step, same "a step that depends on being remembered is not a control" reasoning as the
+  status-budget hook above. Silent: no `hookSpecificOutput`, it only ever deletes stale local files.
 
 Budgets are stated in **characters, not lines** — a line count is not checkable under hard wrapping.
 
