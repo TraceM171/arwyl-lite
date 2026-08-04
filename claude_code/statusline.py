@@ -203,31 +203,33 @@ def write_page(name, session_key, title, sections):
 transcript_path = data.get("transcript_path")
 session_key = hashlib.sha1(transcript_path.encode()).hexdigest()[:12] if transcript_path else None
 project_dir = data.get("workspace", {}).get("project_dir") or data.get("cwd")
-cwd = data.get("cwd") or data.get("workspace", {}).get("current_dir")
 
 # Git branch — dot color reflects real state: clean (green), uncommitted (yellow), unpushed (cyan)
 # Branch stats = uncommitted diff vs HEAD (staged + unstaged); file_stats is the same diff broken
 # down per file (git diff --numstat), used for the branch stats' clickthrough section.
+# Anchored to project_dir, not the session's live cwd — the shell's cwd drifts as the agent `cd`s
+# (scratchpad, other repos, worktrees), and anchoring there made the whole segment vanish whenever
+# it drifted outside a git repo.
 def git_status():
-    if not cwd:
+    if not project_dir:
         return None
     try:
         branch = subprocess.run(
-            ["git", "-C", cwd, "rev-parse", "--abbrev-ref", "HEAD"],
+            ["git", "-C", project_dir, "rev-parse", "--abbrev-ref", "HEAD"],
             capture_output=True, text=True, timeout=2,
         )
         name = branch.stdout.strip()
         if branch.returncode != 0 or not name:
             return None
         diff = subprocess.run(
-            ["git", "-C", cwd, "diff", "--shortstat", "HEAD"],
+            ["git", "-C", project_dir, "diff", "--shortstat", "HEAD"],
             capture_output=True, text=True, timeout=2,
         )
         out = diff.stdout.strip()
         ins = int(m.group(1)) if (m := re.search(r"(\d+) insertion", out)) else 0
         dele = int(m.group(1)) if (m := re.search(r"(\d+) deletion", out)) else 0
         numstat = subprocess.run(
-            ["git", "-C", cwd, "diff", "--numstat", "HEAD"],
+            ["git", "-C", project_dir, "diff", "--numstat", "HEAD"],
             capture_output=True, text=True, timeout=2,
         )
         file_stats = []
@@ -240,7 +242,7 @@ def git_status():
                 continue
             file_stats.append((path, int(a), int(d)))
         ahead = subprocess.run(
-            ["git", "-C", cwd, "rev-list", "--count", "@{u}.."],
+            ["git", "-C", project_dir, "rev-list", "--count", "@{u}.."],
             capture_output=True, text=True, timeout=2,
         )
         unpushed = int(ahead.stdout.strip()) if ahead.returncode == 0 and ahead.stdout.strip().isdigit() else 0
@@ -252,11 +254,11 @@ def git_status():
 # Only hunk lines are kept (index/---/+++ header lines dropped); binary files are absent from
 # `paths` already (filtered out by git_status's numstat pass).
 def git_diff_patches(paths):
-    if not paths or not cwd:
+    if not paths or not project_dir:
         return {}
     try:
         out = subprocess.run(
-            ["git", "-C", cwd, "diff", "HEAD", "--"] + paths,
+            ["git", "-C", project_dir, "diff", "HEAD", "--"] + paths,
             capture_output=True, text=True, timeout=3,
         )
     except Exception:
@@ -505,7 +507,7 @@ def curate_signal(knowledge_dir, total_files):
         return total_files, total_files >= 15
     try:
         out = subprocess.run(
-            ["git", "-C", cwd, "log", f"--since={since_ts}", "--name-only", "--pretty=format:", "--", knowledge_dir],
+            ["git", "-C", project_dir, "log", f"--since={since_ts}", "--name-only", "--pretty=format:", "--", knowledge_dir],
             capture_output=True, text=True, timeout=2,
         )
     except Exception:
@@ -575,7 +577,7 @@ if kn is not None:
     activity_trigger = tool_calls >= 45 and duration_min >= 30 and n_edit == 0
     no_capture_trigger = not reflected and (edits_trigger or activity_trigger)
     dup_risk_trigger = n_edit_since_reflect > 2
-    cur = curate_signal(knowledge_dir, total_files) if cwd else None
+    cur = curate_signal(knowledge_dir, total_files) if project_dir else None
     curate_trigger = bool(cur and cur[1])
 
     read_pct = (n_read / total_files * 100) if total_files else 0

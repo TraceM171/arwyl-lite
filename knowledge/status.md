@@ -19,6 +19,8 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-08-04** — statusline: git segment vanished when session `cwd` drifted outside the repo;
+  re-anchored to stable `workspace.project_dir`. Bumped to `0.1.18`.
 - **2026-07-31** — `secret-capture` dialog now takes separate what/why arguments, both shown to the user;
   fixed `zenity --password` silently ignoring custom `--text` (switched to `--entry --hide-text`, the
   dialog type that actually renders it). `0.2.1` → `0.2.2`.
