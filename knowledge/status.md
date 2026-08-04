@@ -4,7 +4,7 @@
 
 ## Current version
 
-`arwyl-lite` `0.1.17` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.2`
+`arwyl-lite` `0.1.20` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.2`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
@@ -19,6 +19,8 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-08-04** — statusline: `knowledge/`'s own repo (when separate from project_dir) now
+  reports on the `knowledge:` line, not the general repo list. Bumped to `0.1.20`.
 - **2026-08-04** — statusline: multi-repo support — `knowledge/` and code can be separate repos
   (up to 3 levels deep), each listed with `↑ahead↓behind`. Bumped to `0.1.19`.
 - **2026-08-04** — statusline: git segment vanished when session `cwd` drifted outside the repo;
