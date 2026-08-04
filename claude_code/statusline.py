@@ -587,8 +587,8 @@ for repo_path in repo_paths:
     dirty = bool(b_added or b_removed)
     dot = Y if dirty else C if (ahead or behind) else G
     label = "" if repo_path == project_dir else os.path.relpath(repo_path, project_dir) + "/"
-    stat_text = f"\033[1m+{b_added} -{b_removed}{RESET}"
-    ahead_behind = f"{DIM}(↑{RESET}\033[1m{ahead}{RESET}{DIM}↓{RESET}\033[1m{behind}{RESET}{DIM}){RESET}"
+    stat_text = f"\033[1m+{b_added}-{b_removed}{RESET}"
+    ahead_behind = f"{DIM}↑{RESET}\033[1m{ahead}{RESET}{DIM}↓{RESET}\033[1m{behind}{RESET}"
     sec_id = None
     if dirty and session_key and branch_file_stats:
         patches = git_diff_patches(repo_path, [p for p, _, _ in branch_file_stats])
@@ -617,7 +617,7 @@ else:
     added, removed = cost.get("total_lines_added"), cost.get("total_lines_removed")
 lines_str = None
 if added is not None or removed is not None:
-    session_stat_text = f"\033[1m+{added or 0} -{removed or 0}{RESET}"
+    session_stat_text = f"\033[1m+{added or 0}-{removed or 0}{RESET}"
     if (added or removed) and session_key and per_file and project_dir:
         session_rows = [
             (os.path.relpath(p, project_dir), f"+{a} -{d}", _truncate_diff(per_file_diff[p]) if per_file_diff.get(p) else None)
