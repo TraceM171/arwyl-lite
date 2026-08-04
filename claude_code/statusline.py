@@ -204,32 +204,67 @@ transcript_path = data.get("transcript_path")
 session_key = hashlib.sha1(transcript_path.encode()).hexdigest()[:12] if transcript_path else None
 project_dir = data.get("workspace", {}).get("project_dir") or data.get("cwd")
 
+# Repo discovery — some projects keep the git repo(s) in subfolders separate from project_dir
+# itself (e.g. a `code/` repo and a `knowledge/` repo side by side, with project_dir itself
+# untracked). Cases to cover: project_dir IS a repo root (the common case — return just that);
+# project_dir contains one or more repos in subfolders, up to 3 levels deep; a folder that's
+# already a repo never gets descended into further (no nested-repo/submodule double-counting).
+# `.git` existence is checked directly (file or dir — file covers worktrees/submodules) rather
+# than shelling out to git, so a wide/deep scan of a non-repo tree stays cheap.
+_SKIP_DIR_NAMES = {"node_modules", ".venv", "venv", "__pycache__", "dist", "build", ".cache"}
+
+def _is_repo_root(d):
+    return os.path.exists(os.path.join(d, ".git"))
+
+def find_git_repos(root, max_depth=3):
+    if not root or not os.path.isdir(root):
+        return []
+    if _is_repo_root(root):
+        return [root]
+    repos, frontier = [], [root]
+    for _ in range(max_depth):
+        next_frontier = []
+        for d in frontier:
+            try:
+                entries = sorted(os.scandir(d), key=lambda e: e.name)
+            except OSError:
+                continue
+            for entry in entries:
+                if not entry.is_dir(follow_symlinks=False) or entry.name.startswith(".") or entry.name in _SKIP_DIR_NAMES:
+                    continue
+                if _is_repo_root(entry.path):
+                    repos.append(entry.path)
+                else:
+                    next_frontier.append(entry.path)
+        frontier = next_frontier
+        if not frontier:
+            break
+    return repos
+
 # Git branch — dot color reflects real state: clean (green), uncommitted (yellow), unpushed (cyan)
 # Branch stats = uncommitted diff vs HEAD (staged + unstaged); file_stats is the same diff broken
 # down per file (git diff --numstat), used for the branch stats' clickthrough section.
-# Anchored to project_dir, not the session's live cwd — the shell's cwd drifts as the agent `cd`s
-# (scratchpad, other repos, worktrees), and anchoring there made the whole segment vanish whenever
-# it drifted outside a git repo.
-def git_status():
-    if not project_dir:
-        return None
+# Takes an explicit repo_path (from find_git_repos), not the session's live cwd — the shell's cwd
+# drifts as the agent `cd`s (scratchpad, other repos, worktrees), and anchoring there made the
+# whole segment vanish whenever it drifted outside a git repo.
+def git_status(repo_path):
     try:
         branch = subprocess.run(
-            ["git", "-C", project_dir, "rev-parse", "--abbrev-ref", "HEAD"],
+            ["git", "-C", repo_path, "rev-parse", "--abbrev-ref", "HEAD"],
             capture_output=True, text=True, timeout=2,
         )
         name = branch.stdout.strip()
         if branch.returncode != 0 or not name:
             return None
         diff = subprocess.run(
-            ["git", "-C", project_dir, "diff", "--shortstat", "HEAD"],
+            ["git", "-C", repo_path, "diff", "--shortstat", "HEAD"],
             capture_output=True, text=True, timeout=2,
         )
         out = diff.stdout.strip()
         ins = int(m.group(1)) if (m := re.search(r"(\d+) insertion", out)) else 0
         dele = int(m.group(1)) if (m := re.search(r"(\d+) deletion", out)) else 0
         numstat = subprocess.run(
-            ["git", "-C", project_dir, "diff", "--numstat", "HEAD"],
+            ["git", "-C", repo_path, "diff", "--numstat", "HEAD"],
             capture_output=True, text=True, timeout=2,
         )
         file_stats = []
@@ -241,24 +276,30 @@ def git_status():
             if a == "-" or d == "-":  # binary file, numstat can't count lines
                 continue
             file_stats.append((path, int(a), int(d)))
-        ahead = subprocess.run(
-            ["git", "-C", project_dir, "rev-list", "--count", "@{u}.."],
+        # Ahead/behind vs upstream — left/right count of HEAD...@{u}: left = commits on HEAD not
+        # on upstream (ahead/unpushed), right = commits on upstream not on HEAD (behind). No
+        # upstream configured just fails the command, leaving both at 0.
+        counts = subprocess.run(
+            ["git", "-C", repo_path, "rev-list", "--left-right", "--count", "HEAD...@{u}"],
             capture_output=True, text=True, timeout=2,
         )
-        unpushed = int(ahead.stdout.strip()) if ahead.returncode == 0 and ahead.stdout.strip().isdigit() else 0
-        return name, ins, dele, unpushed, file_stats
+        ahead = behind = 0
+        parts2 = counts.stdout.split()
+        if counts.returncode == 0 and len(parts2) == 2 and all(p.isdigit() for p in parts2):
+            ahead, behind = int(parts2[0]), int(parts2[1])
+        return name, ins, dele, ahead, behind, file_stats
     except Exception:
         return None
 
 # Full unified diff (git diff HEAD), split per file — feeds the branch stats' foldable diff view.
 # Only hunk lines are kept (index/---/+++ header lines dropped); binary files are absent from
 # `paths` already (filtered out by git_status's numstat pass).
-def git_diff_patches(paths):
-    if not paths or not project_dir:
+def git_diff_patches(repo_path, paths):
+    if not paths:
         return {}
     try:
         out = subprocess.run(
-            ["git", "-C", project_dir, "diff", "HEAD", "--"] + paths,
+            ["git", "-C", repo_path, "diff", "HEAD", "--"] + paths,
             capture_output=True, text=True, timeout=3,
         )
     except Exception:
@@ -350,7 +391,13 @@ def knowledge_activity():
     if not os.path.isdir(knowledge_dir):
         return None
     knowledge_root = knowledge_dir + os.sep
-    total_files = sum(len(files) for _, _, files in os.walk(knowledge_dir))
+    # Skip .git — knowledge/ can be its own repo (separate from project_dir's), and os.walk would
+    # otherwise count every internal file under knowledge/.git toward the tree size.
+    def _walk_skip_git(top):
+        for dirpath, dirnames, filenames in os.walk(top):
+            dirnames[:] = [d for d in dirnames if d != ".git"]
+            yield dirpath, dirnames, filenames
+    total_files = sum(len(files) for _, _, files in _walk_skip_git(knowledge_dir))
     try:
         with open(transcript_path) as f:
             lines = f.readlines()
@@ -517,28 +564,49 @@ def curate_signal(knowledge_dir, total_files):
     changed = len({l for l in out.stdout.splitlines() if l.strip()})
     return changed, changed >= 10
 
-git_info = git_status()
+repo_paths = find_git_repos(project_dir)
+# knowledge/ leads the list when it's its own repo — it's the one most worth a glance first.
+if project_dir:
+    _knowledge_repo = os.path.join(project_dir, "knowledge")
+    if _knowledge_repo in repo_paths:
+        repo_paths = [_knowledge_repo] + [p for p in repo_paths if p != _knowledge_repo]
 diff = session_line_diff()
 kn = knowledge_activity()
 
-# Git branch line
-git_str = None
-if git_info:
-    branch, b_added, b_removed, unpushed, branch_file_stats = git_info
+# Repo segments — one per discovered repo: "● label branch (↑ahead ↓behind) +added -removed".
+# Label is the repo's path relative to project_dir (e.g. "knowledge/"), omitted when project_dir
+# itself is the repo (nothing to disambiguate). Each dirty repo's diffstat links to its own
+# section of a shared "branch" page (one write per render, multiple sections — same pattern as
+# write_page's other callers).
+branch_sections, repo_renders = [], []
+for repo_path in repo_paths:
+    info = git_status(repo_path)
+    if not info:
+        continue
+    branch, b_added, b_removed, ahead, behind, branch_file_stats = info
     dirty = bool(b_added or b_removed)
-    dot = Y if dirty else C if unpushed else G
+    dot = Y if dirty else C if (ahead or behind) else G
+    label = "" if repo_path == project_dir else os.path.relpath(repo_path, project_dir) + "/"
     stat_text = f"\033[1m+{b_added} -{b_removed}{RESET}"
+    ahead_behind = f"{DIM}(↑{RESET}\033[1m{ahead}{RESET}{DIM}↓{RESET}\033[1m{behind}{RESET}{DIM}){RESET}"
+    sec_id = None
     if dirty and session_key and branch_file_stats:
-        patches = git_diff_patches([p for p, _, _ in branch_file_stats])
+        patches = git_diff_patches(repo_path, [p for p, _, _ in branch_file_stats])
         branch_rows = [
             (path, f"+{a} -{d}", _truncate_diff(patches[path]) if patches.get(path) else None)
             for path, a, d in branch_file_stats
         ]
-        page_path = write_page("branch", session_key, "Branch changes", [("Changed files", "branch", branch_rows)])
-        if page_path:
-            stat_text = hyperlink(stat_text, page_path + "#branch")
-    branch_stats = f"{DIM}branch {RESET}{stat_text}"
-    git_str = f"{dot}●{RESET} \033[1m{branch}{RESET}{SEP}{branch_stats}"
+        sec_id = f"branch-{len(branch_sections)}"
+        heading = f"Changed files ({label.rstrip('/')})" if label else "Changed files"
+        branch_sections.append((heading, sec_id, branch_rows))
+    repo_renders.append((dot, label, branch, ahead_behind, stat_text, sec_id))
+
+branch_page_path = write_page("branch", session_key, "Branch changes", branch_sections) if branch_sections else None
+
+repo_parts = []
+for dot, label, branch, ahead_behind, stat_text, sec_id in repo_renders:
+    text = hyperlink(stat_text, branch_page_path + f"#{sec_id}") if (branch_page_path and sec_id) else stat_text
+    repo_parts.append(f"{dot}●{RESET} {DIM}{label}{RESET}\033[1m{branch}{RESET} {ahead_behind} {text}")
 
 # Session line-diff line
 per_file, per_file_diff = {}, {}
@@ -621,7 +689,7 @@ if kn is not None:
     if curate_trigger:
         kn_str += f"{SEP}{Y}●{RESET} \033[1mcurate?{RESET} {DIM}(dirtiness){RESET}"
 
-git_line_parts = [p for p in [git_str, lines_str] if p]
+git_line_parts = ([lines_str] if lines_str else []) + repo_parts
 status_parts = [ctx_str, model_str] + ([cost_str] if cost_str else []) + rl_parts
 
 lines = []

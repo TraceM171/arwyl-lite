@@ -19,6 +19,8 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-08-04** — statusline: multi-repo support — `knowledge/` and code can be separate repos
+  (up to 3 levels deep), each listed with `↑ahead↓behind`. Bumped to `0.1.19`.
 - **2026-08-04** — statusline: git segment vanished when session `cwd` drifted outside the repo;
   re-anchored to stable `workspace.project_dir`. Bumped to `0.1.18`.
 - **2026-07-31** — `secret-capture` dialog now takes separate what/why arguments, both shown to the user;
