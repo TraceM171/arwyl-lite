@@ -565,28 +565,30 @@ def curate_signal(knowledge_dir, total_files):
     return changed, changed >= 10
 
 repo_paths = find_git_repos(project_dir)
-# knowledge/ leads the list when it's its own repo — it's the one most worth a glance first.
-if project_dir:
-    _knowledge_repo = os.path.join(project_dir, "knowledge")
-    if _knowledge_repo in repo_paths:
-        repo_paths = [_knowledge_repo] + [p for p in repo_paths if p != _knowledge_repo]
+# knowledge/, when it's its own repo, is reported on the knowledge line instead of in the repo
+# list below (see kn_str assembly) — pull it out here so it isn't rendered twice.
+knowledge_repo_path = os.path.join(project_dir, "knowledge") if project_dir else None
+knowledge_is_repo = bool(knowledge_repo_path) and knowledge_repo_path in repo_paths
+if knowledge_is_repo:
+    repo_paths = [p for p in repo_paths if p != knowledge_repo_path]
 diff = session_line_diff()
 kn = knowledge_activity()
 
-# Repo segments — one per discovered repo: "● label branch (↑ahead ↓behind) +added -removed".
-# Label is the repo's path relative to project_dir (e.g. "knowledge/"), omitted when project_dir
-# itself is the repo (nothing to disambiguate). Each dirty repo's diffstat links to its own
-# section of a shared "branch" page (one write per render, multiple sections — same pattern as
-# write_page's other callers).
-branch_sections, repo_renders = [], []
-for repo_path in repo_paths:
+# Repo segments — one per discovered repo: "● label branch ↑ahead↓behind +added-removed". Label
+# is the repo's path relative to project_dir (e.g. "code/"), omitted when project_dir itself is
+# the repo (nothing to disambiguate). Each dirty repo's diffstat links to its own section of a
+# shared "branch" page (one write per render, multiple sections — same pattern as write_page's
+# other callers). knowledge/'s own repo (if any) shares this page/section numbering but is
+# rendered separately, on the knowledge line — see below.
+branch_sections = []
+
+def render_repo(repo_path, label, heading_name=None):
     info = git_status(repo_path)
     if not info:
-        continue
+        return None
     branch, b_added, b_removed, ahead, behind, branch_file_stats = info
     dirty = bool(b_added or b_removed)
     dot = Y if dirty else C if (ahead or behind) else G
-    label = "" if repo_path == project_dir else os.path.relpath(repo_path, project_dir) + "/"
     stat_text = f"\033[1m+{b_added}-{b_removed}{RESET}"
     ahead_behind = f"{DIM}↑{RESET}\033[1m{ahead}{RESET}{DIM}↓{RESET}\033[1m{behind}{RESET}"
     sec_id = None
@@ -597,16 +599,34 @@ for repo_path in repo_paths:
             for path, a, d in branch_file_stats
         ]
         sec_id = f"branch-{len(branch_sections)}"
-        heading = f"Changed files ({label.rstrip('/')})" if label else "Changed files"
+        name = heading_name or label.rstrip("/")
+        heading = f"Changed files ({name})" if name else "Changed files"
         branch_sections.append((heading, sec_id, branch_rows))
-    repo_renders.append((dot, label, branch, ahead_behind, stat_text, sec_id))
+    return dot, label, branch, ahead_behind, stat_text, sec_id
+
+repo_renders = []
+for repo_path in repo_paths:
+    label = "" if repo_path == project_dir else os.path.relpath(repo_path, project_dir) + "/"
+    r = render_repo(repo_path, label)
+    if r:
+        repo_renders.append(r)
+
+knowledge_repo_render = render_repo(knowledge_repo_path, "", heading_name="knowledge") if knowledge_is_repo else None
+# No knowledge line will render this (e.g. transcript_path missing) — fall back to the regular
+# repo list (with a label, since it's no longer implied by a "knowledge:" line) so knowledge/'s
+# state isn't silently dropped.
+if knowledge_repo_render and kn is None:
+    repo_renders.append((*knowledge_repo_render[:1], "knowledge/", *knowledge_repo_render[2:]))
+    knowledge_repo_render = None
 
 branch_page_path = write_page("branch", session_key, "Branch changes", branch_sections) if branch_sections else None
 
-repo_parts = []
-for dot, label, branch, ahead_behind, stat_text, sec_id in repo_renders:
+def _render_repo_text(dot, label, branch, ahead_behind, stat_text, sec_id):
     text = hyperlink(stat_text, branch_page_path + f"#{sec_id}") if (branch_page_path and sec_id) else stat_text
-    repo_parts.append(f"{dot}●{RESET} {DIM}{label}{RESET}{branch} {ahead_behind} {text}")
+    return f"{dot}●{RESET} {DIM}{label}{RESET}{branch} {ahead_behind} {text}"
+
+repo_parts = [_render_repo_text(*r) for r in repo_renders]
+knowledge_repo_str = _render_repo_text(*knowledge_repo_render) if knowledge_repo_render else None
 
 # Session line-diff line
 per_file, per_file_diff = {}, {}
@@ -672,7 +692,10 @@ if kn is not None:
     edit_text = f"{edit_num}{DIM} edited ({RESET}\033[1m{edit_pct:.0f}%{RESET}{DIM}){RESET}"
     read_part = italic(read_text)
     edit_part = italic(edit_text)
-    kn_str = f"{DIM}knowledge:{RESET} " + SEP.join([read_part, edit_part])
+    # knowledge_repo_str (its own repo's branch/diffstat) is persistent repo state, not
+    # session-scoped — left un-italicized, like the main branch line, unlike read/edit above.
+    kn_line_parts = [read_part, edit_part] + ([knowledge_repo_str] if knowledge_repo_str else [])
+    kn_str = f"{DIM}knowledge:{RESET} " + SEP.join(kn_line_parts)
 
     # Reflect nudge — no baseline stat, shown only when a trigger actually fires.
     if no_capture_trigger or dup_risk_trigger:
