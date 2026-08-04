@@ -606,7 +606,7 @@ branch_page_path = write_page("branch", session_key, "Branch changes", branch_se
 repo_parts = []
 for dot, label, branch, ahead_behind, stat_text, sec_id in repo_renders:
     text = hyperlink(stat_text, branch_page_path + f"#{sec_id}") if (branch_page_path and sec_id) else stat_text
-    repo_parts.append(f"{dot}●{RESET} {DIM}{label}{RESET}\033[1m{branch}{RESET} {ahead_behind} {text}")
+    repo_parts.append(f"{dot}●{RESET} {DIM}{label}{RESET}{branch} {ahead_behind} {text}")
 
 # Session line-diff line
 per_file, per_file_diff = {}, {}
