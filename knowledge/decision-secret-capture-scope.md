@@ -26,12 +26,12 @@ of evidence.
 ## Capture + cleanup only, no exposure-warning guard hook
 
 A `PreToolUse` hook could substring-match the active secret's value against every `Bash`/`Write`/`Edit`
-call and deny matches — but unlike sanctum's `block-env-dump.sh` (which pattern-matches command *syntax*
+call and deny matches — but unlike the field-test consumer's `block-env-dump.sh` (which pattern-matches command *syntax*
 with no value in hand), this would need the plaintext readable from disk for the *entire* checkout window,
 not just the seconds a consuming command needs it — a real widening of exposure versus today. It would
 also need a static, never-value-interpolated deny reason (or the guard becomes the leak), and a
 minimum-length floor so short values don't false-positive against ordinary commands and train the habit of
-working around it — exactly the failure mode sanctum's own decision doc already rejected a broader hook
+working around it — exactly the failure mode the field-test consumer's own decision doc already rejected a broader hook
 for.
 
 **Rejected for now, by explicit owner choice** (asked directly, chose "capture + cleanup only") — not
@@ -42,7 +42,7 @@ risks above, not as a default follow-up.
 ## Consequences accepted
 
 - The `secret-capture` skill's own text still has to instruct "reference by path only, never `cat` it" as
-  prose, same as sanctum's shapes 2–4 today — no mechanical backstop for that discipline yet.
+  prose, same as the field-test consumer's shapes 2–4 today — no mechanical backstop for that discipline yet.
 - If the skill-based invocation is field-verified as reliable, "no MCP tool" is a standing choice, not
   just a starting one — re-litigate deliberately if raised again, don't treat this file's silence as
   permission to skip the question next time.
@@ -54,6 +54,6 @@ risks above, not as a default follow-up.
   the guard hook raised and deferred *before* building anything, via a direct question.
 - `decision-plugin-split.md` — the sibling decision this skill shipped under; scoped to *why two plugins*,
   not to `secret-capture`'s own internal design, hence a separate file here.
-- `audit-2026-07-31-capture-secret-cleanup-bug.md` — a real bug found while building this skill (a
+- `incident-2026-07-31-capture-secret-cleanup-bug.md` — a real bug found while building this skill (a
   `set -e` pitfall that silently skipped cleanup on failure paths), unrelated to the scope choices above
   but discovered in the same session.

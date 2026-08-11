@@ -13,11 +13,15 @@ Chosen approach for distributing and versioning Arwyl Lite, and how the moving p
 - **Channel**: GitHub marketplace `TraceM171/arwyl-lite`, plugin name `arwyl-lite`, marketplace name `arwyl-lite-marketplace`. Previously named `agents-knowledge` (renamed `cda2226`).
 - **Multi-tool intent, not multi-tool sharing**: `claude_code/` today; other tools (e.g. OpenCode) get their own top-level folder with real, adapted copies — not one abstraction shared across tools.
 
+## This repo runs its own plugin
+
+Arwyl Lite is installed in its own repo at project scope (`.claude/settings.json`) and dogfoods its own conventions — this `knowledge/` tree is the result, not the product (`_basic.md`).
+
+The parts that can be wired to the **working copy** rather than the plugin cache are: the status line points at this checkout's `claude_code/statusline.py`, and `.claude/settings.json` points the status-budget hook at `claude_code/hooks/status-budget.sh` (see "Enforcement mechanisms"). Both exist so edits are visible immediately, without a version bump or reinstall cycle, while actively developing. Everything loaded *as a plugin* — the skills, the `SessionStart` hook — still comes from the version-pinned cache, so skill-text changes need the normal bump-and-reinstall round trip to be exercised here (`decision-versioning.md`).
+
 ## Version-bump-for-cache
 
-Claude Code caches an installed plugin keyed by `plugin.json`'s `version` string, not by commit SHA. Pushing new commits alone does not reach existing installs — `version` must bump too, or the cached copy stays stale even after `/plugin marketplace update` refreshes the marketplace's own git checkout. Learned the hard way twice (`2d491a9`, `3e93d02`) before this became an explicit rule.
-
-Alternative exists: omit `version` entirely → Claude Code falls back to commit-SHA versioning, fully automatic once the per-marketplace auto-update toggle is on. Considered, not adopted — chose to keep explicit semver plus the auto-update toggle instead.
+Claude Code caches an installed plugin keyed by `plugin.json`'s `version` string, not by commit SHA. Pushing new commits alone does not reach existing installs — `version` must bump too, or the cached copy stays stale even after `/plugin marketplace update` refreshes the marketplace's own git checkout. Why explicit semver rather than the commit-SHA fallback: `decision-versioning.md`.
 
 **`installed_plugins.json` is not a reliable record of what a project runs.** `~/.claude/plugins/installed_plugins.json` pins a per-project `installPath`/`version`, but it goes stale: during the 2026-07-16 field review it listed `0.1.11` for the field-test consumer while it was demonstrably running `0.1.13`. It is a red herring — do not use it to determine a consumer's version. Trust, in order: the `/plugin` UI, or **behavioural evidence** in the consumer's own output (the `_curated.md` marker format proved `0.1.13` outright: bare date = ≤`0.1.11`, ISO timestamp + separate trailing commit = `0.1.13`). Version-discriminating behaviour beats metadata.
 

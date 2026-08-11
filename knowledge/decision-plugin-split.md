@@ -66,7 +66,7 @@ organized.
   knowledge-tree conventions changed — a plugin's shipped skill set changed, which is a version-bump
   event per `stack.md` regardless of cause.
 - Verified end-to-end 2026-07-31, twice (once per skill shipped) — current state in `status.md`, the one
-  real bug hit along the way in `audit-2026-07-31-arwyl-extras-symlink.md`.
+  real bug hit along the way in `incident-2026-07-31-arwyl-extras-symlink.md`.
 
 ## Deliberation
 

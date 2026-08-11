@@ -1,14 +1,12 @@
 # Status — Current State
 
-**As of 2026-07-31.**
+**As of 2026-08-04.**
 
 ## Current version
 
 `arwyl-lite` `0.1.20` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.2`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
-
-(The push to get `0.1.7` out briefly failed — SSH agent couldn't sign with the hardware key, "agent refused operation" — retried clean once the key was touched; every version since has pushed normally.)
 
 This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17`. `arwyl-extras`' cache is still `0.2.0`
 — `0.2.1`/`0.2.2` are pushed but not yet reinstalled here; their changes were verified by running the
@@ -20,26 +18,27 @@ behavioural evidence.
 ## Recent changes
 
 - **2026-08-04** — statusline: `knowledge/`'s own repo (when separate from project_dir) now
-  reports on the `knowledge:` line, not the general repo list. Bumped to `0.1.20`.
+  reports on the `knowledge:` line, not the general repo list; plus git-segment style tightening.
+  Bumped to `0.1.20`. `2926b28`, `d0f69f7`, `f879f5f`, `edb678f`.
 - **2026-08-04** — statusline: multi-repo support — `knowledge/` and code can be separate repos
-  (up to 3 levels deep), each listed with `↑ahead↓behind`. Bumped to `0.1.19`.
+  (up to 3 levels deep), each listed with `↑ahead↓behind`. Bumped to `0.1.19`. `f8d6b6e`.
 - **2026-08-04** — statusline: git segment vanished when session `cwd` drifted outside the repo;
-  re-anchored to stable `workspace.project_dir`. Bumped to `0.1.18`.
-- **2026-07-31** — `secret-capture` dialog now takes separate what/why arguments, both shown to the user;
-  fixed `zenity --password` silently ignoring custom `--text` (switched to `--entry --hide-text`, the
-  dialog type that actually renders it). `0.2.1` → `0.2.2`.
-- **2026-07-31** — first real-consumer use (sanctum) hit a categorical auto-mode classifier deny on
+  re-anchored to stable `workspace.project_dir`. Bumped to `0.1.18`. `f9ed8e7`.
+- **2026-07-31** — `secret-capture` dialog now takes separate what/why arguments; fixed
+  `zenity --password` silently ignoring custom `--text` (switched to `--entry --hide-text`, the
+  dialog type that actually renders it). `0.2.1` → `0.2.2`. `ed6916e`.
+- **2026-07-31** — first real-consumer use hit a categorical auto-mode classifier deny on
   `secret-capture`'s invocation; confirmed working under manual mode. `0.2.0` → `0.2.1`.
-  `audit-2026-07-31-secret-capture-auto-mode-block.md`.
+  `incident-2026-07-31-secret-capture-auto-mode-block.md`.
 - **2026-07-31** — shipped `secret-capture` in `arwyl-extras` (`0.1.1` → `0.2.0`): OS-dialog capture
   script + cleanup script + `Stop`-hook sweep backstop. `SKILL.md`, `decision-secret-capture-scope.md`,
-  `audit-2026-07-31-capture-secret-cleanup-bug.md`.
+  `incident-2026-07-31-capture-secret-cleanup-bug.md`.
 - **2026-07-31** — `arwyl-extras`' `handoff` shipped empty (dangling symlink from the split); fixed,
-  bumped to `0.1.1`. `audit-2026-07-31-arwyl-extras-symlink.md`.
+  bumped to `0.1.1`. `incident-2026-07-31-arwyl-extras-symlink.md`.
 - **2026-07-31** — split `handoff` out of `arwyl-lite` into a new sibling plugin `arwyl-extras`
   (`arwyl-extras/`, marketplace entry added), version `0.1.0`; `arwyl-lite` bumped to `0.1.17` for the
   removal. `decision-plugin-split.md`.
-- **2026-07-29** — bumped to `0.1.16` to ship the field-study rule fixes + status-budget hook (previously landed at `0.1.15` but not version-bumped, so no install picked them up).
+- **2026-07-29** — bumped to `0.1.16` to ship the field-study rule fixes + status-budget hook (previously landed at `0.1.15` but not version-bumped, so no install picked them up). `f18e998`, `decision-versioning.md`.
 - **2026-07-29** — field study of a consumer's first curate pass: 6 findings, 7 rule fixes, and a new `PostToolUse` status-budget hook. `audit-2026-07-29-field-study-curate.md`, `decision-mechanism-over-prose.md`.
 - **`f4d5fcc`** — internal `field-study` skill (`.claude/skills/`, not shipped): study a consumer to find arwyl system gaps. `.claude/skills/field-study/SKILL.md`.
 - **`9541468`** — added the "Place for retrieval" rule (retrievability as a second placement axis, wired through AGENTS/reflect/curate). Preventive — `decision-retrievability.md`.
@@ -60,7 +59,7 @@ behavioural evidence.
 
 ## Open
 
-- Reinstall `arwyl-extras` to `0.2.2` on this machine and this session's own sanctum test bed, then
+- Reinstall `arwyl-extras` to `0.2.2` on this machine and on the field-test consumer, then
   re-verify `secret-capture` from the actual cache path (the `0.2.1`/`0.2.2` fixes were only verified
   against the working copy directly).
 - `secret-capture`'s macOS (`osascript`) and Windows dialog paths are unverified — only the Linux
@@ -69,5 +68,7 @@ behavioural evidence.
   choices with stated revisit triggers, not unfinished work. `decision-secret-capture-scope.md`.
 - `secret-capture` is categorically blocked by Claude Code's auto-mode classifier; confirmed working
   under manual mode. Auto-mode-with-allowlist specifically is untested, not known to fail.
-  `audit-2026-07-31-secret-capture-auto-mode-block.md`.
-- This `knowledge/` tree itself is brand new (scaffolded 2026-07-10) — expect a `reflect`/`curate` pass to reshape it as real work accumulates. No domains yet, by design.
+  `incident-2026-07-31-secret-capture-auto-mode-block.md`.
+- Watch whether a second consumer's `curate` also patches within domains instead of restructuring when
+  asked for a big restructure — one occurrence so far, judged a judgment call rather than a missing
+  rule. `audit-2026-07-29-field-study-curate.md`.

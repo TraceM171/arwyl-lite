@@ -11,16 +11,18 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `_basic.md` | this file — project index |
 | `stack.md` | distribution and design mechanics — what we use and how it works |
 | `decision-taxonomy-kinds.md` | the six kinds — why, and the alternatives rejected |
+| `decision-versioning.md` | explicit semver, bumped on every ship — why, and the SHA-versioning alternative rejected |
 | `decision-retrievability.md` | retrievability as a second placement axis — why (preventive) |
 | `decision-mechanism-over-prose.md` | when a rule gets a mechanism instead of more wording — why, and the bar |
 | `decision-plugin-split.md` | why `handoff` and `secret-capture` live in `arwyl-extras`, not `arwyl-lite` |
 | `decision-secret-capture-scope.md` | why `secret-capture` has no guard hook and no MCP-tool interface (yet) |
 | `audit-2026-07-17-retrievability-burial-test.md` | the burial test: design, results, why it didn't reproduce |
 | `audit-2026-07-29-field-study-curate.md` | field study of a consumer's first curate pass: 6 findings, what worked |
-| `audit-2026-07-31-arwyl-extras-symlink.md` | `arwyl-extras` shipped an empty `handoff` skill — a `git mv`'d symlink, not content |
-| `audit-2026-07-31-capture-secret-cleanup-bug.md` | `set -e` silently skipped `capture-secret.sh`'s cleanup on every non-happy-path exit |
-| `audit-2026-07-31-secret-capture-auto-mode-block.md` | `secret-capture` categorically blocked under Claude Code auto mode; works under manual |
+| `incident-2026-07-31-arwyl-extras-symlink.md` | `arwyl-extras` shipped an empty `handoff` skill — a `git mv`'d symlink, not content |
+| `incident-2026-07-31-capture-secret-cleanup-bug.md` | `set -e` silently skipped `capture-secret.sh`'s cleanup on every non-happy-path exit |
+| `incident-2026-07-31-secret-capture-auto-mode-block.md` | `secret-capture` categorically blocked under Claude Code auto mode; works under manual |
 | `status.md` | current version, recent changes, open items |
+| `_curated.md` | reserved marker — UTC timestamp of the last `curate` pass, read by the status line |
 | `.local/_basic.md` | owner-specific context |
 
 ## Read order
@@ -41,7 +43,8 @@ Design-first, and rules are added from concrete failure modes observed in a real
 Three deliberate departures, each recorded rather than blurred:
 
 - **"Place for retrieval" (2026-07-17)** — added from design-gap analysis *after* a synthetic test failed to reproduce the burial it targeted. `decision-retrievability.md`.
-- **The frozen-file exemption to the mega-file rule, and the top-level home for cross-cutting decisions (2026-07-29)** — the consumer did the right thing in both cases and the rules were simply silent on it. These document existing correct practice rather than correct an observed failure; the risk they address (the next pass re-litigating, or a different consumer guessing wrong) is reasoned, not measured.
+- **The frozen-file exemption to the mega-file rule (2026-07-29)** — the consumer left its large closed dated records alone, which was correct, and the rules were simply silent on it. Documents existing correct practice rather than correcting an observed failure; the risk it addresses (the next pass re-litigating) is reasoned, not measured.
+- **The top-level home for cross-cutting decisions (2026-07-29)** — likewise: the consumer filed its six project-wide decisions at top level correctly, and nothing in the rules said so. The risk addressed (a different consumer guessing wrong and burying the constraint) is reasoned, not measured.
 
 Where the bar *was* met, it is now met harder: the 2026-07-29 contradiction prohibition was traced to an observed fabrication, then A/B-tested against controls before shipping — the first rule here validated by reproducing its failure first. See `audit-2026-07-29-field-study-curate.md`.
 
