@@ -1,20 +1,26 @@
 # Incident — `secret-capture` categorically blocked under Claude Code auto mode
 
-**Date:** 2026-07-31. Closed same day — first real-consumer use, in sanctum.
+**Date:** 2026-07-31. Closed same day — the field-test consumer's first real use of the skill.
+
+> **Redacted 2026-08-11.** This closed record was edited once, post-closure, to replace six mentions of
+> the field-test consumer's private name with the generic term the shared tree uses (`.local/_basic.md`).
+> A deliberate, owner-approved exception to "dated files are append-only": no claim, date, finding or
+> conclusion changed — only the consumer's name. The original wording remains in git history, which
+> `b0630bb` already accepted as out of reach.
 
 ## What happened
 
-The owner tried `secret-capture` for real in sanctum, immediately after it shipped. `capture-secret.sh`'s
+The owner tried `secret-capture` for real in the field-test consumer, immediately after it shipped. `capture-secret.sh`'s
 invocation was denied by "the Claude Code auto mode classifier" — not one of the script's own signalled
 outcomes (`CANCELLED`/`TIMEOUT`/`NO_DISPLAY`/`UNSUPPORTED`), a denial of the tool call itself, before the
-script ever ran. The denial held across three different invocation shapes in the same sanctum session: a
+script ever ran. The denial held across three different invocation shapes in that same session: a
 direct `Bash` call, the identical call after the owner approved it via `AskUserQuestion`, and again via
 the `Skill` tool's own documented invocation path. Explicit human approval through a different channel did
 not clear it — a categorical deny, not a cautious permission prompt.
 
 Diagnosis continued in this repo's own session (arwyl-lite), since the mechanism itself was working here
 in every earlier test. Two more data points, both under auto mode:
-- Adding a narrow `permissions.allow` entry for the script to sanctum's `.claude/settings.local.json`
+- Adding a narrow `permissions.allow` entry for the script to the consumer's `.claude/settings.local.json`
   (proposed as the likely fix) was *itself* denied by the same classifier when attempted as a tool call —
   the meta-action of granting permission for the script, not just running it, was blocked.
 - The owner then switched this session's mode from auto to manual. The identical settings edit succeeded
@@ -39,7 +45,7 @@ this class of action at all. Left untested rather than assumed either way.
 
 `secret-capture`'s core value proposition was Claude reaching for it autonomously mid-task, without the
 owner needing to babysit anything. Under auto mode — the mode this entire session ran in until this
-incident, and sanctum's default too — it cannot do that: the invocation is denied before a human ever
+incident, and the consumer's default too — it cannot do that: the invocation is denied before a human ever
 sees a prompt to approve. The workaround is real but manual: the *user* switches to manual mode for the
 capture step, not Claude working around the block. `SKILL.md` now instructs exactly that (stop, explain,
 let the user decide) rather than retrying a different invocation shape, which would be bypass behavior
@@ -47,7 +53,7 @@ against a safety layer, not legitimate debugging.
 
 ## Deliberation
 
-- sanctum session `240fd15a`, lines ~586–609 — the three denied attempts and the owner's own diagnosis
+- The field-test consumer's session `240fd15a`, lines ~586–609 — the three denied attempts and the owner's own diagnosis
   request that led here.
 - This repo's own session, 2026-07-31 — the permission-grant denial, the mode switch, and both successful
   retries (settings edit, then the script itself).
