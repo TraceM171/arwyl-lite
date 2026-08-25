@@ -72,6 +72,10 @@ cost_str = italic(f"\033[1m${cost_usd:.2f}{RESET}") if cost_usd is not None else
 rate = data.get("rate_limits", {})
 rl_parts = [s for s in [fmt_reset(rate.get("five_hour", {})), fmt_reset(rate.get("seven_day", {}))] if s]
 
+# Dynamic profile indicator - appended to the end of the last line when set and non-default
+profile = os.environ.get("CLAUDE_ACTIVE_PROFILE")
+profile_str = f"\033[1m{profile}{RESET}" if profile and profile not in ("main", "default") else None
+
 # OSC8 hyperlink — wraps text so terminals that support it (iTerm2, kitty, wezterm, VSCode)
 # can click through to a generated local page. Terminals without support just show the text,
 # no link. Only count segments (read / edited / branch / session stats) get wrapped — labels
@@ -204,13 +208,7 @@ transcript_path = data.get("transcript_path")
 session_key = hashlib.sha1(transcript_path.encode()).hexdigest()[:12] if transcript_path else None
 project_dir = data.get("workspace", {}).get("project_dir") or data.get("cwd")
 
-# Repo discovery — some projects keep the git repo(s) in subfolders separate from project_dir
-# itself (e.g. a `code/` repo and a `knowledge/` repo side by side, with project_dir itself
-# untracked). Cases to cover: project_dir IS a repo root (the common case — return just that);
-# project_dir contains one or more repos in subfolders, up to 3 levels deep; a folder that's
-# already a repo never gets descended into further (no nested-repo/submodule double-counting).
-# `.git` existence is checked directly (file or dir — file covers worktrees/submodules) rather
-# than shelling out to git, so a wide/deep scan of a non-repo tree stays cheap.
+# Repo discovery — see docstrings in script
 _SKIP_DIR_NAMES = {"node_modules", ".venv", "venv", "__pycache__", "dist", "build", ".cache"}
 
 def _is_repo_root(d):
@@ -241,12 +239,6 @@ def find_git_repos(root, max_depth=3):
             break
     return repos
 
-# Git branch — dot color reflects real state: clean (green), uncommitted (yellow), unpushed (cyan)
-# Branch stats = uncommitted diff vs HEAD (staged + unstaged); file_stats is the same diff broken
-# down per file (git diff --numstat), used for the branch stats' clickthrough section.
-# Takes an explicit repo_path (from find_git_repos), not the session's live cwd — the shell's cwd
-# drifts as the agent `cd`s (scratchpad, other repos, worktrees), and anchoring there made the
-# whole segment vanish whenever it drifted outside a git repo.
 def git_status(repo_path):
     try:
         branch = subprocess.run(
@@ -273,12 +265,9 @@ def git_status(repo_path):
             if len(parts) != 3:
                 continue
             a, d, path = parts
-            if a == "-" or d == "-":  # binary file, numstat can't count lines
+            if a == "-" or d == "-":  # binary file
                 continue
             file_stats.append((path, int(a), int(d)))
-        # Ahead/behind vs upstream — left/right count of HEAD...@{u}: left = commits on HEAD not
-        # on upstream (ahead/unpushed), right = commits on upstream not on HEAD (behind). No
-        # upstream configured just fails the command, leaving both at 0.
         counts = subprocess.run(
             ["git", "-C", repo_path, "rev-list", "--left-right", "--count", "HEAD...@{u}"],
             capture_output=True, text=True, timeout=2,
@@ -291,9 +280,6 @@ def git_status(repo_path):
     except Exception:
         return None
 
-# Full unified diff (git diff HEAD), split per file — feeds the branch stats' foldable diff view.
-# Only hunk lines are kept (index/---/+++ header lines dropped); binary files are absent from
-# `paths` already (filtered out by git_status's numstat pass).
 def git_diff_patches(repo_path, paths):
     if not paths:
         return {}
@@ -322,13 +308,6 @@ def git_diff_patches(repo_path, paths):
         patches[current_path] = "\n".join(current_lines)
     return patches
 
-# Lines added/removed this session (whole session, not knowledge-scoped). Computed from the
-# transcript's per-edit patches rather than data["cost"] — the latter only tracks the current
-# process and resets to 0 on session resume, even though the transcript (and its line diffs)
-# carries over since resume appends to the same transcript file rather than starting a new one.
-# Also tallies a per-file breakdown (toolUseResult.filePath), and the actual hunk text (per file,
-# in edit order — multiple edits to the same file just append, since it's showing what happened
-# rather than a single net diff), for the session stats' clickthrough section.
 def session_line_diff():
     if not transcript_path:
         return None
@@ -367,23 +346,6 @@ def session_line_diff():
         return None
     return added, removed, per_file, per_file_diff
 
-# Knowledge-tree activity this session — knowledge/**.md files read vs edited, as % of the tree.
-# Also scans for reflect-nudge signals: non-knowledge edits (code changed, not captured), overall
-# tool-call volume/session duration (investigation happened, e.g. an SSH debugging session with no
-# file edits at all), and live-capture edits piling up since the last reflect pass — each is a proxy
-# for "there's probably something worth reflecting".
-#
-# `reflect_boundary` marks the line where the last reflect pass handed control back to the user (the
-# first "user" transcript entry after a Skill("reflect") call) — edits after that line are "since last
-# reflect"; edits at or before it are reflect's own writes and don't count. No reflect this session
-# leaves the boundary at -1, so everything since session start counts (matches AGENTS.md's "capture
-# as you go" framing: first reflect, or session start, whichever is the relevant zero point).
-#
-# `curate_windows` is the same idea applied to curate: a list of (start, end) line ranges, one per
-# curate invocation this session, using identical open/close detection. A curate pass makes deliberate,
-# already-reviewed cleanup edits — not live capture at risk of duplication — so edits falling inside
-# any window are excluded from `edited_since_reflect` the same way reflect's own edits are, regardless
-# of where the window falls relative to `reflect_boundary`.
 def knowledge_activity():
     if not transcript_path or not project_dir:
         return None
@@ -391,8 +353,6 @@ def knowledge_activity():
     if not os.path.isdir(knowledge_dir):
         return None
     knowledge_root = knowledge_dir + os.sep
-    # Skip .git — knowledge/ can be its own repo (separate from project_dir's), and os.walk would
-    # otherwise count every internal file under knowledge/.git toward the tree size.
     def _walk_skip_git(top):
         for dirpath, dirnames, filenames in os.walk(top):
             dirnames[:] = [d for d in dirnames if d != ".git"]
@@ -404,32 +364,6 @@ def knowledge_activity():
     except OSError:
         return None
 
-    # Pass 1: locate reflect_boundary — a forward scan can't know it while walking edits, since
-    # reflect's own writes (invocation -> its Edits -> next real user turn) all land *before* the
-    # boundary is knowable. Find it first: the line of the first real user turn after the LAST
-    # reflect invocation. Edits at or before it are reflect's own; edits after are "since last
-    # reflect". No reflect this session leaves it at -1, so everything counts from the top.
-    #
-    # Reflect gets invoked two different ways, and both have to be caught:
-    #  - the assistant calls the Skill tool (input.skill may be namespaced, e.g.
-    #    "arwyl-lite:reflect" for marketplace installs — match on the tail after the last ":").
-    #  - the user directly types the slash command (`/reflect` or `/arwyl-lite:reflect`). This
-    #    does NOT show up as an assistant Skill tool_use at all — Claude Code records it as a
-    #    "user"-type entry whose content is a literal string containing
-    #    "<command-name>/arwyl-lite:reflect</command-name>".
-    #
-    # "First user entry after the invocation" is NOT "first real chat turn", though — tool_result
-    # blocks come back as type:"user" too (every tool call reflect itself makes, e.g. its own
-    # Edit/Write calls, gets an immediate type:"user" tool_result entry), and slash-command
-    # invocation is actually TWO synthetic entries: the "<command-name>" marker (real, matched
-    # above) immediately followed by a second type:"user" entry containing the expanded skill
-    # prompt text, flagged `isMeta: true`. Treating either of those as "the next user turn" closed
-    # the boundary one line after the invocation — before reflect had done any of its actual work
-    # — so its own edits counted as "since last reflect" (confirmed against the field-test consumer's real
-    # transcript: 8/8 edited-since-reflect immediately after a reflect run). Skip both: only a
-    # user entry that's neither tool-result-only nor isMeta really closes the boundary. If nothing
-    # like that appears before EOF (reflect was the literal last thing that ran), the boundary
-    # closes at end-of-file — none of reflect's edits should count as "since reflect" either way.
     reflect_cmd_re = re.compile(r"<command-name>/(?:[^<:]+:)?reflect</command-name>")
     curate_cmd_re = re.compile(r"<command-name>/(?:[^<:]+:)?curate</command-name>")
     reflect_boundary = -1
@@ -482,7 +416,6 @@ def knowledge_activity():
     if awaiting_curate_boundary:
         curate_windows.append((curate_window_start, len(lines)))
 
-    # Pass 2: tally reads/edits against the now-known boundary.
     read_files, edited_files, non_kn_edited_files = set(), set(), set()
     edited_since_reflect = set()
     tool_calls = 0
@@ -513,10 +446,6 @@ def knowledge_activity():
             elif name in ("Edit", "Write", "NotebookEdit"):
                 non_kn_edited_files.add(fp)
 
-    # A file touched mid-session can be renamed/merged/deleted later in the same session (e.g.
-    # a curate restructuring pass) — its path stays in these sets but drops out of total_files
-    # (a fresh disk count at render time), which pushed read/edit % over 100. Drop paths that no
-    # longer exist so the numerator and denominator describe the same tree snapshot.
     read_files = {p for p in read_files if os.path.isfile(p)}
     edited_files = {p for p in edited_files if os.path.isfile(p)}
     edited_since_reflect &= edited_files
@@ -525,21 +454,6 @@ def knowledge_activity():
             tool_calls, reflected, len(edited_since_reflect), sorted(read_files), sorted(edited_files),
             edited_since_reflect)
 
-# Curate nudge — how much of the knowledge tree has changed since the last curate pass.
-# `knowledge/_curated.md` (reserved marker, see KNOWLEDGE_ORG.md) holds the UTC timestamp curate
-# last ran; count distinct knowledge files touched by commits since then. No marker yet (never
-# curated) falls back to total tree size, gated so a small fresh tree doesn't nag.
-#
-# A bare date (`YYYY-MM-DD`) marker is day-granular: `git log --since=<date>` is midnight-inclusive,
-# so it sweeps in every commit from that whole calendar day — including ones made *before* curate
-# ran that day, and curate's own reviewed-but-not-yet-committed work landing moments after. That
-# double-counted a day's ordinary work as post-curate drift whenever curate ran anywhere but first
-# thing in the morning (confirmed against the field-test consumer's 2026-07-15 session logs: curate ran last, at
-# 19:49 UTC, after reviewing that day's 26-file storage/backup rewrite and finding nothing to fix —
-# but the bare-date marker still made the next session's --since=2026-07-15 catch all 26 files,
-# including ones committed hours before curate even started). A full timestamp fixes the common
-# case; it can't fully close a several-second race if a commit lands after curate's marker write
-# but before the process that authored it exits — not worth chasing further.
 def curate_signal(knowledge_dir, total_files):
     marker_path = os.path.join(knowledge_dir, "_curated.md")
     since_ts = None
@@ -565,8 +479,6 @@ def curate_signal(knowledge_dir, total_files):
     return changed, changed >= 10
 
 repo_paths = find_git_repos(project_dir)
-# knowledge/, when it's its own repo, is reported on the knowledge line instead of in the repo
-# list below (see kn_str assembly) — pull it out here so it isn't rendered twice.
 knowledge_repo_path = os.path.join(project_dir, "knowledge") if project_dir else None
 knowledge_is_repo = bool(knowledge_repo_path) and knowledge_repo_path in repo_paths
 if knowledge_is_repo:
@@ -574,12 +486,6 @@ if knowledge_is_repo:
 diff = session_line_diff()
 kn = knowledge_activity()
 
-# Repo segments — one per discovered repo: "● label branch ↑ahead↓behind +added-removed". Label
-# is the repo's path relative to project_dir (e.g. "code/"), omitted when project_dir itself is
-# the repo (nothing to disambiguate). Each dirty repo's diffstat links to its own section of a
-# shared "branch" page (one write per render, multiple sections — same pattern as write_page's
-# other callers). knowledge/'s own repo (if any) shares this page/section numbering but is
-# rendered separately, on the knowledge line — see below.
 branch_sections = []
 
 def render_repo(repo_path, label, heading_name=None):
@@ -612,9 +518,6 @@ for repo_path in repo_paths:
         repo_renders.append(r)
 
 knowledge_repo_render = render_repo(knowledge_repo_path, "", heading_name="knowledge") if knowledge_is_repo else None
-# No knowledge line will render this (e.g. transcript_path missing) — fall back to the regular
-# repo list (with a label, since it's no longer implied by a "knowledge:" line) so knowledge/'s
-# state isn't silently dropped.
 if knowledge_repo_render and kn is None:
     repo_renders.append((*knowledge_repo_render[:1], "knowledge/", *knowledge_repo_render[2:]))
     knowledge_repo_render = None
@@ -628,7 +531,6 @@ def _render_repo_text(dot, label, branch, ahead_behind, stat_text, sec_id):
 repo_parts = [_render_repo_text(*r) for r in repo_renders]
 knowledge_repo_str = _render_repo_text(*knowledge_repo_render) if knowledge_repo_render else None
 
-# Session line-diff line
 per_file, per_file_diff = {}, {}
 if diff is not None:
     added, removed, per_file, per_file_diff = diff
@@ -648,18 +550,10 @@ if added is not None or removed is not None:
             session_stat_text = hyperlink(session_stat_text, page_path + "#session")
     lines_str = italic(f"{DIM}session {RESET}{session_stat_text}")
 
-# Knowledge line — always rendered when a knowledge/ dir exists, even at 0/0/0 (that's a
-# legitimate reading: nothing touched yet this session).
 kn_str = None
 if kn is not None:
     knowledge_dir, n_read, n_edit, total_files, n_non_kn_edit, tool_calls, reflected, n_edit_since_reflect, read_files_list, edited_files_list, edited_since_reflect = kn
 
-    # Reflect nudge triggers — see git history / KNOWLEDGE_ORG.md for the rationale:
-    # 1. no_capture_trigger — code changed (>=8 non-knowledge files) or a long investigation
-    #    (>=45 tool calls over >=30min) happened, no knowledge file touched (n_edit == 0), and
-    #    reflect hasn't run yet this session.
-    # 2. dup_risk_trigger — more than 2 knowledge files edited since the last reflect pass (or
-    #    since session start, if reflect hasn't run yet), excluding reflect's and curate's own edits.
     duration_min = (data.get("cost", {}).get("total_duration_ms") or 0) / 60000
     edits_trigger = n_non_kn_edit >= 8 and n_edit == 0
     activity_trigger = tool_calls >= 45 and duration_min >= 30 and n_edit == 0
@@ -683,7 +577,6 @@ if kn is not None:
             [("Read", "read", rows_read), ("Edited", "edited", rows_edit)],
         )
         if page_path:
-            # a zero count has nothing to click through to — leave those plain, not linked
             if n_read:
                 read_num = hyperlink(read_num, page_path + "#read")
             if n_edit:
@@ -692,12 +585,9 @@ if kn is not None:
     edit_text = f"{edit_num}{DIM} edited ({RESET}\033[1m{edit_pct:.0f}%{RESET}{DIM}){RESET}"
     read_part = italic(read_text)
     edit_part = italic(edit_text)
-    # knowledge_repo_str (its own repo's branch/diffstat) is persistent repo state, not
-    # session-scoped — left un-italicized, like the main branch line, unlike read/edit above.
     kn_line_parts = [read_part, edit_part] + ([knowledge_repo_str] if knowledge_repo_str else [])
     kn_str = f"{DIM}knowledge:{RESET} " + SEP.join(kn_line_parts)
 
-    # Reflect nudge — no baseline stat, shown only when a trigger actually fires.
     if no_capture_trigger or dup_risk_trigger:
         reasons = "+".join(r for r, on in (
             ("edits", edits_trigger and not reflected),
@@ -707,13 +597,11 @@ if kn is not None:
         reflect_text = f"{Y}●{RESET} \033[1mreflect?{RESET} {DIM}({reasons}){RESET}"
         kn_str += SEP + italic(reflect_text)
 
-    # Curate nudge — same shape, no baseline stat. Not wrapped in italic() — curate is persistent
-    # repo state (survives across sessions), not session-scoped, per italic()'s docstring.
     if curate_trigger:
         kn_str += f"{SEP}{Y}●{RESET} \033[1mcurate?{RESET} {DIM}(dirtiness){RESET}"
 
 git_line_parts = ([lines_str] if lines_str else []) + repo_parts
-status_parts = [ctx_str, model_str] + ([cost_str] if cost_str else []) + rl_parts
+status_parts = [ctx_str, model_str] + ([cost_str] if cost_str else []) + rl_parts + ([profile_str] if profile_str else [])
 
 lines = []
 if kn_str:
