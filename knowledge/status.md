@@ -1,10 +1,10 @@
 # Status — Current State
 
-**As of 2026-08-04.**
+**As of 2026-08-25.**
 
 ## Current version
 
-`arwyl-lite` `0.1.20` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.2`
+`arwyl-lite` `0.1.21` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.2`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
@@ -17,6 +17,11 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-08-25** — statusline: knowledge line silently fell back to the general repo list at
+  launch (a not-yet-created transcript was treated as an error, not zero activity). Bumped to
+  `0.1.21`. `17eeaf3`.
+- **2026-08-25** — statusline: added a `CLAUDE_ACTIVE_PROFILE` indicator to the last line;
+  trimmed several inline comments. `22684c3`.
 - **2026-08-04** — statusline: `knowledge/`'s own repo (when separate from project_dir) now
   reports on the `knowledge:` line, not the general repo list; plus git-segment style tightening.
   Bumped to `0.1.20`. `2926b28`, `d0f69f7`, `f879f5f`, `edb678f`.
