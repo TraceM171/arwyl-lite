@@ -342,12 +342,14 @@ def session_line_diff():
                     per_file[fp] = (pa + a, pd + d)
                     existing = per_file_diff.get(fp, "")
                     per_file_diff[fp] = (existing + "\n" if existing else "") + "\n".join(chunks)
+    except FileNotFoundError:
+        pass
     except OSError:
         return None
     return added, removed, per_file, per_file_diff
 
 def knowledge_activity():
-    if not transcript_path or not project_dir:
+    if not project_dir:
         return None
     knowledge_dir = os.path.join(project_dir, "knowledge")
     if not os.path.isdir(knowledge_dir):
@@ -358,11 +360,19 @@ def knowledge_activity():
             dirnames[:] = [d for d in dirnames if d != ".git"]
             yield dirpath, dirnames, filenames
     total_files = sum(len(files) for _, _, files in _walk_skip_git(knowledge_dir))
-    try:
-        with open(transcript_path) as f:
-            lines = f.readlines()
-    except OSError:
-        return None
+    # transcript_path can be absent, or point to a file that doesn't exist yet, in the brief
+    # window at session launch before the first message — that's not an error, it's zero
+    # activity so far (the knowledge line is meant to always render, even at 0/0/0). Only
+    # bail on a real read error.
+    lines = []
+    if transcript_path:
+        try:
+            with open(transcript_path) as f:
+                lines = f.readlines()
+        except FileNotFoundError:
+            pass
+        except OSError:
+            return None
 
     reflect_cmd_re = re.compile(r"<command-name>/(?:[^<:]+:)?reflect</command-name>")
     curate_cmd_re = re.compile(r"<command-name>/(?:[^<:]+:)?curate</command-name>")
