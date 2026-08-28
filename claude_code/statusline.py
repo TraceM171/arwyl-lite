@@ -476,9 +476,24 @@ def curate_signal(knowledge_dir, total_files):
             since_ts = content
     if not since_ts:
         return total_files, total_files >= 15
+    # The history query has to run in whatever repo actually tracks knowledge_dir — its own repo
+    # (split knowledge/code layout), a subdirectory of the project repo, or a submodule — not
+    # project_dir, which in a split layout often isn't a repo at all. Fall back to the file-count
+    # heuristic when nothing tracks it, rather than silently disabling the nudge.
+    try:
+        top = subprocess.run(
+            ["git", "-C", knowledge_dir, "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=2,
+        )
+    except Exception:
+        return None
+    if top.returncode != 0 or not top.stdout.strip():
+        return total_files, total_files >= 15
+    repo_root = top.stdout.strip()
+    pathspec = os.path.relpath(knowledge_dir, repo_root)
     try:
         out = subprocess.run(
-            ["git", "-C", project_dir, "log", f"--since={since_ts}", "--name-only", "--pretty=format:", "--", knowledge_dir],
+            ["git", "-C", repo_root, "log", f"--since={since_ts}", "--name-only", "--pretty=format:", "--", pathspec],
             capture_output=True, text=True, timeout=2,
         )
     except Exception:
