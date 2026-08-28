@@ -27,11 +27,14 @@ except OSError:
 # taxonomy and its quick-reminder line has to live here.
 # Raised 8500 -> 8800 in 0.1.15, deliberately: the "Place for retrieval, not just for kind" rule
 # added two permanent pointers here — a read-side one (consultation item 4: follow cross-cutting
-# pointers) and a live-capture one — with the full rule kept in KNOWLEDGE_ORG.md, not inlined. The
-# only other thing in the payload is the ~150-char read-instruction line below, so the real worst
-# case is ~8950 against the 10,000 cap — still ~1k of margin. Keep this in sync with
-# AGENTS_MD_BUDGET in .githooks/pre-commit.
-AGENTS_MD_BUDGET = 8800
+# pointers) and a live-capture one — with the full rule kept in KNOWLEDGE_ORG.md, not inlined.
+# Raised 8800 -> 9000 in 0.1.22, deliberately: a permanent rule ("Use the file tools for knowledge,
+# not the shell") — knowledge reads/edits must go through Read/Edit/Write so the status line's
+# read/edit tracker and the reflect/curate nudges actually see them; shell cat/sed access is
+# invisible to that transcript scan. With the ~150-char read-instruction line below, worst case is
+# now ~9150 against the 10,000 cap — still ~850 of margin. Keep this in sync with AGENTS_MD_BUDGET
+# in .githooks/pre-commit.
+AGENTS_MD_BUDGET = 9000
 context = [agents_md]
 if len(agents_md) > AGENTS_MD_BUDGET:
     context.append(
