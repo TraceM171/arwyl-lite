@@ -4,7 +4,7 @@
 
 ## Current version
 
-`arwyl-lite` `0.1.22` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.2`
+`arwyl-lite` `0.1.23` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.2`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
@@ -17,6 +17,9 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-08-28** — statusline: the `curate?` check ran `git log` in `project_dir`, not a repo in a
+  split knowledge/code layout — so it silently gave no signal and never fired. Now runs in the repo
+  that tracks `knowledge/`. Bumped to `0.1.23`. `74862f1`.
 - **2026-08-28** — AGENTS.md: new rule requiring `Read`/`Edit`/`Write` for knowledge files, not
   `cat`/`sed` — shell reads are invisible to the statusline tracker and the reflect/curate nudges,
   so bash-first sessions showed `0 read`. Budget 8800 → 9000. Bumped to `0.1.22`. `33e6d46`.
