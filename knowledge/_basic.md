@@ -18,6 +18,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `decision-secret-capture-scope.md` | why `secret-capture` has no guard hook and no MCP-tool interface (yet) |
 | `audit-2026-07-17-retrievability-burial-test.md` | the burial test: design, results, why it didn't reproduce |
 | `audit-2026-07-29-field-study-curate.md` | field study of a consumer's first curate pass: 6 findings, what worked |
+| `audit-2026-08-29-field-study-thescriv.md` | field study of a second consumer (mobile app): 1 confirmed gap (plan-slot / plan-completion), rule fixes in `0.1.25`, and what's working confirmed at N=2 |
 | `incident-2026-07-31-arwyl-extras-symlink.md` | `arwyl-extras` shipped an empty `handoff` skill — a `git mv`'d symlink, not content |
 | `incident-2026-07-31-capture-secret-cleanup-bug.md` | `set -e` silently skipped `capture-secret.sh`'s cleanup on every non-happy-path exit |
 | `incident-2026-07-31-secret-capture-auto-mode-block.md` | `secret-capture` categorically blocked under Claude Code auto mode; works under manual |
@@ -38,7 +39,7 @@ The product is `claude_code/` (plugin `arwyl-lite`) and `arwyl-extras/` (plugin 
 
 ## Philosophy
 
-Design-first, and rules are added from concrete failure modes observed in a real consumer, not from speculative design. Most are: see `decision-taxonomy-kinds.md` and `audit-2026-07-29-field-study-curate.md`.
+Design-first, and rules are added from concrete failure modes observed in a real consumer, not from speculative design. Most are: see `decision-taxonomy-kinds.md`, `audit-2026-07-29-field-study-curate.md`, and `audit-2026-08-29-field-study-thescriv.md`.
 
 Three deliberate departures, each recorded rather than blurred:
 
@@ -47,5 +48,7 @@ Three deliberate departures, each recorded rather than blurred:
 - **The top-level home for cross-cutting decisions (2026-07-29)** — likewise: the consumer filed its six project-wide decisions at top level correctly, and nothing in the rules said so. The risk addressed (a different consumer guessing wrong and burying the constraint) is reasoned, not measured.
 
 Where the bar *was* met, it is now met harder: the 2026-07-29 contradiction prohibition was traced to an observed fabrication, then A/B-tested against controls before shipping — the first rule here validated by reproducing its failure first. See `audit-2026-07-29-field-study-curate.md`.
+
+The 2026-08-29 plan-slot / plan-completion fix (`0.1.25`) sits between the two: it was traced to a real observed misfile — a completed cross-domain plan left squatting the `phases.md` name, two curate passes reaching opposite verdicts on it, the downstream misfile caught by the user — but the fix itself is prose, not A/B-tested. `audit-2026-08-29-field-study-thescriv.md`.
 
 **And where prose is the wrong instrument, a rule is not the answer at all** — `decision-mechanism-over-prose.md`.

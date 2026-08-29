@@ -72,3 +72,8 @@ positives on the other 94.
 
 - `audit-2026-07-29-field-study-curate.md` — the field study: the 7/7 evidence, the transcript
   timing that rules out "the rule didn't reach the writer", and the character calibration.
+- `audit-2026-08-29-field-study-thescriv.md` — field-confirmed in a second, unrelated consumer.
+  The `PostToolUse` hook fired via the **plugin-delivered** path (not this repo's working-copy
+  wiring), flagged two marginal overages (301, 302 chars) the agent then trimmed, and the sanctum
+  7-of-7 pattern (a `reflect` pass trimming the preceding commit's over-budget entries) did **not**
+  recur — 0 of 5, with 58 of 58 `status.md` entries under budget.

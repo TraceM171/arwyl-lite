@@ -4,7 +4,7 @@
 
 ## Current version
 
-`arwyl-lite` `0.1.24` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.2`
+`arwyl-lite` `0.1.25` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.2`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
@@ -17,6 +17,9 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-08-29** — field study of a second consumer (mobile app): 1 confirmed gap — a completed plan
+  squatting the `phases.md` slot forces the next one to misfile. `KNOWLEDGE_ORG.md` / `curate.md` /
+  `reflect.md` fixes, `0.1.25`. `audit-2026-08-29-field-study-thescriv.md`.
 - **2026-08-29** — statusline: `curate?` fired the instant a curate finished and never cleared —
   `curate_signal` counted drift since the marker *timestamp*, and `git log --since` re-counts
   curate's own tail commits at the same-second boundary. Now counts `<marker commit>..HEAD`.
@@ -84,6 +87,3 @@ behavioural evidence.
 - `secret-capture` is categorically blocked by Claude Code's auto-mode classifier; confirmed working
   under manual mode. Auto-mode-with-allowlist specifically is untested, not known to fail.
   `incident-2026-07-31-secret-capture-auto-mode-block.md`.
-- Watch whether a second consumer's `curate` also patches within domains instead of restructuring when
-  asked for a big restructure — one occurrence so far, judged a judgment call rather than a missing
-  rule. `audit-2026-07-29-field-study-curate.md`.
