@@ -7,7 +7,7 @@ Agent entry point for this project. Defines the mandatory reads and the consulta
 These files must be read in full, every session, before doing anything else:
 
 - `knowledge/_basic.md` — project index (subdirectory map, key decisions, philosophy)
-- `knowledge/.local/_basic.md` — owner-specific context (VPS, domain, repo, backup, collab rules)
+- `knowledge/.local/_basic.md` — owner-specific context (environment, accounts, collab rules)
 - `knowledge/status.md` — current deployment/project state
 
 **How this reaches you depends on setup — verify, don't assume either way.** Plugin installs (Option A): the `SessionStart` hook explicitly tells you to read these files rather than pre-loading their content — stuffing a large file (especially `status.md`, which only grows) directly into hook context silently truncates past a certain size with no error, so the hook asks for an explicit read instead of gambling on size. Manual installs (Option B, this file symlinked to `CLAUDE.md`): Claude Code's `@` notation (`@knowledge/_basic.md`, `@knowledge/.local/_basic.md`) pre-loads those two directly, but `status.md` is not on that list — read it yourself the same way. **Either way:** if you don't actually see a mandatory file's content already in this conversation at the start of a session, don't take "it was probably preloaded" on faith — read it yourself before doing anything else.

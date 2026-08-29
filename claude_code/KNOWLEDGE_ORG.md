@@ -181,10 +181,11 @@ Getting this wrong buries the constraint. Filing a project-wide decision inside 
 
 ### Cross-cutting knowledge that has no domain
 
-Some knowledge is genuinely cross-domain — it touches every domain. Two examples:
+Some knowledge is genuinely cross-domain — it touches every domain. Examples:
 
 - A **roadmap** of the project (phases, milestones, status of each).
 - A **glossary** of domain terms.
+- **Standing work rules** — coding conventions, a mandatory task workflow, pre-commit gates, safety steps an agent follows every session. When the project has no domain that naturally owns them, a single top-level file (`conventions.md` or similar) is their home; when a domain does fit — an infra project's operational discipline in `operations/` — put them there instead. Keep it to bare always-on rules: an entry with real rejected alternatives is a `decision-<topic>.md` it links to, a numbered procedure is a pattern.
 
 These belong at the top level as their own files. They are not part of any single domain because every domain is involved.
 
@@ -287,6 +288,8 @@ Two mitigations — apply whichever fit; they are not exclusive:
 
 That is the write-side. Its read-side complement lives in the consultation contract (`AGENTS.md`): **follow those cross-cutting pointers when a task could touch them.** The two sides meet at the link — placement makes the constraint reachable, consultation reaches for it. Neither is a license to bulk-read the tree: the point is to catch the *specific* constraint that bears on the task, not to read everything.
 
+**The mandatory set is itself a finite budget.** `AGENTS.md`'s transitive rule — a file marked "always read" pulls its own "always read" pointers into the mandatory set — is a floor that only ever grows. Every file in that closure is read *in full, every session*, so the bar for adding one is not "this is important" but "this bears on essentially every session, regardless of task." A file that only matters when writing code, or only when touching the running system, is a proactive-consultation target — opened when the task calls for it — not a mandatory read. This is the same economy as the pointer rule above, applied to the guaranteed-read set as a whole: keep it small enough that it is actually read.
+
 ### Recent-changes entries are pointers, not records
 
 A `status.md` "recent changes" entry is **at most 300 characters and ends with a link**: what changed, and where the full record lives. It is not the record itself.
@@ -324,9 +327,14 @@ Extract to a dedicated plan file the moment any of these is true, regardless of 
 
 A queue of independent, same-shaped items scoped to one domain ("install these N apps, any order, one per session") is *not* a plan under this rule — it stays a flat checklist, one line per item, checked off and linked to the resulting per-X file once done.
 
-Where the extracted plan goes: cross-domain → top-level `phases.md`. Single-domain → `<domain>/plan.md`. Both are still Status-kind content — same update cadence, same "every read" audience — just scoped differently from `status.md` itself, the same way a domain's `_basic.md` is still an index despite not being the top-level one.
+Where the extracted plan goes is a question of **scope, not subject** — the same test a cross-cutting decision gets: *do the plan's phases, or the decisions driving it, touch more than one domain?* Yes → top-level `phases.md`. No → `<domain>/plan.md`. The domain the delivered feature seems to "belong" to is **not** the test: a plan named for one feature whose phases land in storage, services *and* UI is cross-domain and goes to `phases.md`. Quick check — look at the plan's own outbound links: if most of them point outside the domain you are about to file it under, that is the wrong home. Both destinations are still Status-kind content — same update cadence, same "every read" audience — just scoped differently from `status.md` itself, the same way a domain's `_basic.md` is still an index despite not being the top-level one.
 
-A plan file has a fixed shape: a one-line goal, ordered phases each carrying a status marker (done / in-progress / pending), a pointer to fuller detail (a per-X file, a dated audit) where one exists, and the current phase called out explicitly enough that a resuming session can tell where things stand from a single read. On completion: write one final pointer line into `status.md`, then delete the plan file — git history keeps the record. A fully-resolved plan is no longer current state, and a kind that never drains anything is the wrong home for it.
+A plan file has a fixed shape: a one-line goal, ordered phases each carrying a status marker (done / in-progress / pending), a pointer to fuller detail (a per-X file, a dated audit) where one exists, and the current phase called out explicitly enough that a resuming session can tell where things stand from a single read.
+
+**On completion the reserved name must come free.** A finished plan is no longer a live plan, and leaving it in the `phases.md` / `<domain>/plan.md` slot is exactly what forces the *next* plan to misfile (into a domain file, or nowhere clean). Two ways to free it:
+
+- **Default — delete it.** Write one final pointer line into `status.md`; git history keeps the record. A fully-resolved plan is no longer current state, and a kind that never drains anything is the wrong home for it.
+- **If it became a record — convert it.** A long multi-phase plan often accretes a real account of what was built: deviations, a device/test matrix, decisions taken mid-flight — and closed dated files may already link to it. Deleting that loses history; leaving it squats the slot. Instead `git mv` it into a dated `audit-` / `deploy-` file in the domain that owns the bulk of the work, repoint the links you can, and note the redirect where a frozen append-only file forbids repointing. It is now a closed dated record — exempt from the mega-file rule — and the reserved name is free.
 
 ### Dated files are append-only
 
