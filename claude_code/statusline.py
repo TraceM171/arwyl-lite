@@ -491,9 +491,27 @@ def curate_signal(knowledge_dir, total_files):
         return total_files, total_files >= 15
     repo_root = top.stdout.strip()
     pathspec = os.path.relpath(knowledge_dir, repo_root)
+    marker_pathspec = os.path.relpath(marker_path, repo_root)
+    # Count from the commit that stamped the marker, not from its timestamp. curate's final
+    # content commit and the marker re-stamp can land in the same wall-clock second, and
+    # `git log --since=<ts>` includes commits at exactly that second — so a timestamp boundary
+    # re-counts the pass's own tail as post-curate drift. `<marker commit>..HEAD` is exact: when
+    # the marker is HEAD the range is empty. Fall back to the timestamp only when the marker
+    # isn't committed yet (hand-created, or an interrupted pass).
+    try:
+        mc = subprocess.run(
+            ["git", "-C", repo_root, "log", "-1", "--format=%H", "--", marker_pathspec],
+            capture_output=True, text=True, timeout=2,
+        )
+    except Exception:
+        return None
+    if mc.returncode != 0:
+        return None
+    marker_commit = mc.stdout.strip()
+    rev_arg = f"{marker_commit}..HEAD" if marker_commit else f"--since={since_ts}"
     try:
         out = subprocess.run(
-            ["git", "-C", repo_root, "log", f"--since={since_ts}", "--name-only", "--pretty=format:", "--", pathspec],
+            ["git", "-C", repo_root, "log", rev_arg, "--name-only", "--pretty=format:", "--", pathspec],
             capture_output=True, text=True, timeout=2,
         )
     except Exception:
