@@ -1,10 +1,10 @@
 # Status — Current State
 
-**As of 2026-08-28.**
+**As of 2026-08-29.**
 
 ## Current version
 
-`arwyl-lite` `0.1.23` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.2`
+`arwyl-lite` `0.1.24` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.2.2`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
@@ -17,6 +17,10 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-08-29** — statusline: `curate?` fired the instant a curate finished and never cleared —
+  `curate_signal` counted drift since the marker *timestamp*, and `git log --since` re-counts
+  curate's own tail commits at the same-second boundary. Now counts `<marker commit>..HEAD`.
+  `0.1.24`. `1805468`.
 - **2026-08-28** — statusline: the `curate?` check ran `git log` in `project_dir`, not a repo in a
   split knowledge/code layout — so it silently gave no signal and never fired. Now runs in the repo
   that tracks `knowledge/`. Bumped to `0.1.23`. `74862f1`.
