@@ -16,9 +16,12 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `decision-mechanism-over-prose.md` | when a rule gets a mechanism instead of more wording — why, and the bar |
 | `decision-plugin-split.md` | why `handoff` and `secret-capture` live in `arwyl-extras`, not `arwyl-lite` |
 | `decision-secret-capture-scope.md` | why `secret-capture` has no guard hook and no MCP-tool interface (yet) |
+| `decision-thorough-skill.md` | leveled `thorough` skill in `arwyl-extras` (any domain, not investigation-only) — why leveled/opt-in, not a blanket mechanism |
 | `audit-2026-07-17-retrievability-burial-test.md` | the burial test: design, results, why it didn't reproduce |
 | `audit-2026-07-29-field-study-curate.md` | field study of a consumer's first curate pass: 6 findings, what worked |
 | `audit-2026-08-29-field-study-thescriv.md` | field study of a second consumer (mobile app): 1 confirmed gap (plan-slot / plan-completion), rule fixes in `0.1.25`, and what's working confirmed at N=2 |
+| `audit-2026-08-31-thorough-skill-evidence.md` | evidence review behind `decision-thorough-skill.md`: N=1 failure, a clean prose-fix retest, one counter-instance |
+| `audit-2026-08-31-thorough-skill-external-techniques.md` | same-day external corroboration: Anthropic's multi-agent research system, sourcing/coverage fixes applied |
 | `incident-2026-07-31-arwyl-extras-symlink.md` | `arwyl-extras` shipped an empty `handoff` skill — a `git mv`'d symlink, not content |
 | `incident-2026-07-31-capture-secret-cleanup-bug.md` | `set -e` silently skipped `capture-secret.sh`'s cleanup on every non-happy-path exit |
 | `incident-2026-07-31-secret-capture-auto-mode-block.md` | `secret-capture` categorically blocked under Claude Code auto mode; works under manual |
