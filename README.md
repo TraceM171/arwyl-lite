@@ -55,7 +55,7 @@ claude
 /plugin install arwyl-extras@arwyl-lite-marketplace
 ```
 
-Currently ships the `handoff` and `secret-capture` skills (below). No manual/symlink install path — plugin only.
+Currently ships the `handoff`, `secret-capture`, and `thorough` skills (below), plus the `investigator` subagent `thorough` dispatches. No manual/symlink install path — plugin only.
 
 ## Knowledge Structure
 
@@ -174,6 +174,22 @@ it refuses cleanly rather than hanging or falling back to asking you to paste th
 
 **Use:** Claude invokes this itself when a task needs a secret it has no other way to obtain — you
 shouldn't need to ask for it by name.
+
+## Thorough Skill
+
+Ships in `arwyl-extras`, alongside a dispatched `investigator` subagent. Does a big task — research, an
+implementation plan that must strictly follow existing patterns/architecture, a non-technical review
+(diet, finances, a document), any domain — without missing anything, evidence-cited throughout. Not for
+a code diff/PR (use `/code-review` for that). Three levels trade cost for breadth and depth: `standard`
+(default) writes the task's surface to a checklist before doing anything else, then works it
+single-handed; `deep` fans the checklist out to parallel `investigator` subagents; `max` decomposes
+finer and adds an adversarial verification pass grading each finding CONFIRMED/UNCONFIRMED. The
+deliverable follows the task — a findings report, a plan, or an analysis with recommendations, not
+always a report. Only `standard`'s enumerate-first step is backed by an observed failure — `deep`/`max`
+are a reasoned bet, not yet evidence-confirmed (`knowledge/decision-thorough-skill.md`).
+
+**Use:** Ask for something thoroughly/exhaustively, without missing detail, in any domain, or name a
+level explicitly ("thorough at max").
 
 ## Development
 
