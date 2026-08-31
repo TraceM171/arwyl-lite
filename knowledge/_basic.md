@@ -25,6 +25,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `incident-2026-07-31-arwyl-extras-symlink.md` | `arwyl-extras` shipped an empty `handoff` skill — a `git mv`'d symlink, not content |
 | `incident-2026-07-31-capture-secret-cleanup-bug.md` | `set -e` silently skipped `capture-secret.sh`'s cleanup on every non-happy-path exit |
 | `incident-2026-07-31-secret-capture-auto-mode-block.md` | `secret-capture` categorically blocked under Claude Code auto mode; works under manual |
+| `incident-2026-08-31-arwyl-extras-invalid-agents-key.md` | `0.3.0` failed to install: explicit `agents` manifest key rejected — no real plugin uses one |
 | `status.md` | current version, recent changes, open items |
 | `_curated.md` | reserved marker — UTC timestamp of the last `curate` pass, read by the status line |
 | `.local/_basic.md` | owner-specific context |

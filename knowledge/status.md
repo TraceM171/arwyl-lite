@@ -4,20 +4,23 @@
 
 ## Current version
 
-`arwyl-lite` `0.1.25` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.3.0`
+`arwyl-lite` `0.1.25` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.3.1`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
 This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17`. `arwyl-extras`' cache is still `0.2.0`
-— `0.2.1` through `0.3.0` are pushed but not yet reinstalled here; changes through `0.2.2` were verified
+— `0.2.1` through `0.3.1` are pushed but not yet reinstalled here; changes through `0.2.2` were verified
 by running the working-copy scripts directly (real dialogs, real captures), not through the plugin cache
-path; `0.3.0`'s new skill/agent not yet verified through the cache path either. Reinstall and re-verify
-from the cache before calling `0.3.0` field-ready. `installed_plugins.json`-style metadata is not
-reliable evidence of a consumer's actual version, see `stack.md` — trust the cache path or behavioural
-evidence.
+path. `0.3.0` failed to install outright (invalid `agents` manifest key,
+`incident-2026-08-31-arwyl-extras-invalid-agents-key.md`); `0.3.1` fixes it but is not yet installed or
+verified through the cache path. `installed_plugins.json`-style metadata is not reliable evidence of a
+consumer's actual version, see `stack.md` — trust the cache path or behavioural evidence.
 
 ## Recent changes
 
+- **2026-08-31** — `arwyl-extras` `0.3.0` failed to install entirely: invalid `agents` manifest key
+  (no real plugin uses one). Fixed, `0.3.1`.
+  `incident-2026-08-31-arwyl-extras-invalid-agents-key.md`.
 - **2026-08-31** — new `thorough` skill + `investigator` agent in `arwyl-extras`: leveled
   (standard/deep/max), any domain (research/planning/review) — enumerate-first default,
   fan-out/verify opt-in. `0.3.0`. `decision-thorough-skill.md`.
@@ -81,13 +84,14 @@ evidence.
 
 ## Open
 
-- Reinstall `arwyl-extras` to `0.3.0` on this machine and on the field-test consumer, then
-  re-verify `secret-capture` from the actual cache path (the `0.2.1`–`0.3.0` changes were only verified
+- Reinstall `arwyl-extras` to `0.3.1` on this machine and on the field-test consumer, then
+  re-verify `secret-capture` from the actual cache path (the `0.2.1`–`0.3.1` changes were only verified
   against the working copy directly).
-- The `thorough` skill's `investigator` agent (`agents/` manifest key, `effort: xhigh` frontmatter)
-  has never been installed and dispatched through a real plugin cache path — confirmed only against
-  precedent (`claude-security`'s shipped agent suite uses the same fields live). Run all three levels
-  end-to-end after the next reinstall before calling it field-ready.
+- The `thorough` skill's `investigator` agent (`effort: xhigh` frontmatter, auto-discovered `agents/`
+  directory) has never been dispatched through a real plugin cache path — the manifest itself now
+  installs cleanly (`0.3.1` fixed the invalid `agents` key that blocked `0.3.0`,
+  `incident-2026-08-31-arwyl-extras-invalid-agents-key.md`), but no level has actually run yet. Run all
+  three levels end-to-end after the next reinstall before calling it field-ready.
 - `secret-capture`'s macOS (`osascript`) and Windows dialog paths are unverified — only the Linux
   X11/Wayland `zenity` path has a real end-to-end test. Confirm or fix when either platform is next used.
 - `secret-capture` deliberately ships without a guard hook or an MCP-tool interface — both are scope
