@@ -4,22 +4,28 @@
 
 ## Current version
 
-`arwyl-lite` `0.1.25` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.3.3`
+`arwyl-lite` `0.1.25` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.3.4`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
 This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17`. `arwyl-extras`' cache is still `0.2.0`
-— `0.2.1` through `0.3.3` are pushed but not yet reinstalled here; changes through `0.2.2` were verified
+— `0.2.1` through `0.3.4` are pushed but not yet reinstalled here; changes through `0.2.2` were verified
 by running the working-copy scripts directly (real dialogs, real captures), not through the plugin cache
 path. `0.3.0` failed to install outright (invalid `agents` manifest key,
 `incident-2026-08-31-arwyl-extras-invalid-agents-key.md`); `0.3.1` fixed it and was confirmed live
 through a real cache path on a third consumer, 2026-09-01 (`incident-2026-09-01-thorough-deep-session-limit.md`).
-`0.3.2` and `0.3.3` (`thorough` dispatch redesigns) are not yet installed or verified through any cache
-path. `installed_plugins.json`-style metadata is not reliable evidence of a consumer's actual version, see
-`stack.md` — trust the cache path or behavioural evidence.
+`0.3.3` is now also confirmed live through a real cache path (same third consumer, a second `deep`/`slow`
+run the same day — speed lever observed in use — `audit-2026-09-01-thorough-gym-live-run.md`). `0.3.2`
+(superseded same-day) and `0.3.4` (the write-scoping/resume-ordering fix that same run's evidence
+produced) are not yet installed or verified through any cache path. `installed_plugins.json`-style
+metadata is not reliable evidence of a consumer's actual version, see `stack.md` — trust the cache path or
+behavioural evidence.
 
 ## Recent changes
 
+- **2026-09-01** — second real `deep` run confirmed `0.3.3` live via cache, then measured write-token
+  duplication (3x) and a cross-account resume gap; fixed same day, `0.3.4`.
+  `audit-2026-09-01-thorough-gym-live-run.md`.
 - **2026-09-01** — `thorough` `deep`/`max` gained a `speed` lever (fast/regular/slow), a dispatch
   manifest, and same-/cross-session resume-by-agent-ID, tested live. `0.3.3`.
   `audit-2026-09-01-thorough-resume-design.md`.
@@ -101,20 +107,19 @@ path. `installed_plugins.json`-style metadata is not reliable evidence of a cons
 - Reinstall `arwyl-extras` to `0.3.1` on this machine and on the field-test consumer, then
   re-verify `secret-capture` from the actual cache path (the `0.2.1`–`0.3.1` changes were only verified
   against the working copy directly).
-- `standard` and `deep` have now run for real through the `0.3.1` cache path (a third consumer,
-  2026-09-01): `effort:xhigh` confirmed enforced, the ~6-branch cap was respected, no runaway search
-  loop — but `deep` alone hit the account's hard 5-hour session limit mid-run on a near-full budget,
-  and all 5 in-flight `investigator` dispatches died with no findings returned.
-  `incident-2026-09-01-thorough-deep-session-limit.md`. Fixed same day, twice: `0.3.2` shipped
-  sequential-only dispatch, then `0.3.3` replaced it with a `speed` lever + manifest + same-/cross-session
-  resume-by-agent-ID once live tests showed checkpoint-on-notification (not concurrency) was the real
-  mechanism (`decision-thorough-skill.md`, `audit-2026-09-01-thorough-resume-design.md`) — neither version
-  installed or verified through any real cache path yet. Still open: cross-session resume is verified at
-  small scale only, not against a real multi-megabyte transcript or one actually cut off by a usage-limit
-  hit; the branch(es) in flight at the exact moment of an interruption are still lost outright regardless
-  of speed (no mid-generation checkpoint is possible, only post-completion); `max` has never run for real
-  (finer branches *plus* a full verify wave — likely several times `deep`'s measured cost, unconfirmed);
-  and the cost warning still doesn't name a session-limit number for non-API accounts.
+- `standard` and `deep` have now run for real, twice, through the `0.3.1`/`0.3.3` cache path (a third
+  consumer, both 2026-09-01): `effort:xhigh` and the ~6-branch cap confirmed both times; the second run
+  hit the account's session limit again, this time at `slow` — checkpoint-on-notification held (branches
+  1–3 survived), and the "lost" branch was recovered for free from its own raw transcript.
+  `incident-2026-09-01-thorough-deep-session-limit.md`, `audit-2026-09-01-thorough-gym-live-run.md`.
+  Fixed same day, three times: `0.3.2` sequential-only, `0.3.3` speed lever + resume-by-agent-ID,
+  `0.3.4` prompt-scoped `investigator` `Write` (kills the measured write-token triplication) +
+  transcript-read-first resume ordering + a persistence cleanup offer — only `0.3.1` and `0.3.3` verified
+  through a real cache path so far. Still open: `SendMessage`-by-agent-ID resume is untested across
+  accounts (only same-account, and only the transcript-read fallback was actually exercised
+  cross-account); the `Write` scoping is prompt-enforced, not harness-enforced (Claude Code has no
+  per-path tool-permission grant to fall back on); `max` has never run for real; and the cost warning
+  still doesn't name a session-limit number for non-API accounts. `decision-thorough-skill.md`.
 - `secret-capture`'s macOS (`osascript`) and Windows dialog paths are unverified — only the Linux
   X11/Wayland `zenity` path has a real end-to-end test. Confirm or fix when either platform is next used.
 - `secret-capture` deliberately ships without a guard hook or an MCP-tool interface — both are scope

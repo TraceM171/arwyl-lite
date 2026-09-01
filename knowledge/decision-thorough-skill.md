@@ -1,9 +1,9 @@
 # Leveled `thorough` skill for `arwyl-extras`
 
-**Status:** ACTIVE since 2026-08-31 (reaffirmed 2026-09-01 — dispatch redesigned twice same day after a
-real cost/loss incident: first to sequential-only, then to a speed lever + resume design once live tests
-showed the sequential-only fix was more conservative than the evidence required — see "Why",
-`incident-2026-09-01-thorough-deep-session-limit.md`, `audit-2026-09-01-thorough-resume-design.md`)
+**Status:** ACTIVE since 2026-08-31 (reaffirmed 2026-09-01, twice — first the dispatch redesign below, then
+again same day after a second real `deep` run measured write-token duplication and a cross-account resume
+gap; see "Why", `incident-2026-09-01-thorough-deep-session-limit.md`,
+`audit-2026-09-01-thorough-resume-design.md`, `audit-2026-09-01-thorough-gym-live-run.md`)
 **Decision:** Ship a new `thorough` skill plus a dispatched `investigator` subagent in `arwyl-extras`
 (`arwyl-extras/skills/thorough/`, `arwyl-extras/agents/investigator.md`) — not `arwyl-lite`, per the
 same no-knowledge-tree-dependency split test as `decision-plugin-split.md`. Domain-agnostic: research,
@@ -15,12 +15,15 @@ depth:
 - **`standard`** (default) — write the task's surface to a checklist file before doing anything else,
   then work it single-handed, citing evidence and chasing each item past its first plausible finding.
 - **`deep`** — the same enumeration, then works the checklist through `investigator` dispatches (cap ~6
-  branches), checkpointing each branch's findings to a durable manifest file the moment its completion
-  notification is verified, at every speed — narrow scope buying real depth per branch, checkpoint-on-
-  notification buying real survivability of a mid-run interruption. A `speed` lever (`fast`/`regular`/
-  `slow`, default `regular`) controls how many branches may be simultaneously outstanding, trading
-  wall-clock speed against how much an interruption can lose. An interrupted run can be resumed, same
-  session or a different one, via the manifest and a resume-by-agent-ID mechanism.
+  branches), each writing its own findings straight to a per-branch results file (linked from the durable
+  manifest file, not inlined into it) the moment its completion notification is verified, at every speed —
+  narrow scope buying real depth per branch, checkpoint-on-notification buying real survivability of a
+  mid-run interruption, and the direct-write buying back the token cost of the orchestrator re-emitting
+  what the subagent already generated. A `speed` lever (`fast`/`regular`/`slow`, default `regular`)
+  controls how many branches may be simultaneously outstanding, trading wall-clock speed against how much
+  an interruption can lose. An interrupted run can be resumed, same session, a different session, or a
+  different account, by reading a branch's own transcript file directly, with `SendMessage`-by-agent-ID
+  and a fresh dispatch as successive fallbacks.
 - **`max`** — finer decomposition (cap ~10-12 branches) plus an adversarial verification round that
   grades every finding CONFIRMED/UNCONFIRMED before it's reported.
 
@@ -155,7 +158,8 @@ run the same day:
 the same durable checklist file; checkpoint on verified notification at whichever speed is running; and
 support resuming an interrupted run, same-session via `SendMessage`-by-ID or cross-session via
 copy-then-`SendMessage`-by-ID with a fresh-dispatch fallback (`thorough/SKILL.md`, "Resuming an
-interrupted run"). `0.3.2` → `0.3.3`.
+interrupted run"). `0.3.2` → `0.3.3`. (`0.3.4`, below, adds per-branch results files and reorders resume
+to try a direct transcript read before `SendMessage`.)
 
 **Same-day finding: this significantly overlaps a real, native Claude Code feature — "dynamic workflows"
 (`/docs/en/workflows`).** A workflow is a JS script Claude writes that orchestrates many subagents with
@@ -170,6 +174,52 @@ Bundled `/deep-research` already does much of what `thorough`'s `deep` level doe
 workflows are gated (opt-in on Pro via `/config`, can be org-disabled), so a workflow-only `thorough` would
 break for consumers without them — this stays a prose skill for now, with whether to also ship an
 experimental `arwyl-extras/workflows/*.js` alternative left as an open, not-yet-decided direction.
+
+**Second real `deep` run, write-token duplication measured, cross-account resume gap found, added
+2026-09-01.** A second real `deep`/`slow` run (`audit-2026-09-01-thorough-gym-live-run.md`) hit the
+account's session limit a second time — mid-run again, this time at `slow` speed, confirming the loss is
+driven by total token spend, not concurrency. Checkpoint-on-notification held: branches 1–3 survived. Two
+new things were measured, not previously evidenced:
+
+- **Write-token duplication is real and triples, not doubles.** A branch's subagent generates its findings
+  once (output tokens, in the `<task-notification>`); the orchestrator then re-emits a condensed version via
+  `Edit` to checkpoint it into the working file (13–21KB per branch, measured); `SKILL.md` step 4 then
+  `Read` the whole working file back into context and `Write`ed a fresh ~110KB permanent knowledge file —
+  a third re-emission of the same material. Confirmed the owner's own diagnosis of this cost, with real
+  numbers behind it for the first time.
+- **The documented cross-session resume mechanism (`SendMessage`-by-copied-agent-ID,
+  `audit-2026-09-01-thorough-resume-design.md`) was distrusted for the cross-*account* case and never
+  attempted.** What worked instead: reading the subagent's own raw transcript `.jsonl` directly with a
+  one-off script and extracting its last real text turn — no live agent, no session/account match needed,
+  just a file path. It also recovered a branch whose notification had arrived in the origin session one
+  turn before the account limit killed the turn that would have checkpointed it — real evidence that
+  `decision-thorough-skill.md`'s prior "lost outright" framing for an in-flight branch overstated the risk:
+  the raw transcript is a free, reliable fallback independent of whether the notification round-trip
+  completed.
+
+**Fixes shipped, checked against Claude Code's actual permission model first.** Confirmed via
+`code.claude.com/docs/en/sub-agents`: subagent frontmatter `tools:` is a flat allow-list of tool names, and
+the `Agent` dispatch call carries no per-invocation permission override (only `model` is per-invocation) —
+so a hard, harness-enforced "this dispatch may write only to this one path" is not natively available; the
+real mechanism would be a `PreToolUse` hook cross-checking a live agent-id→path manifest, which adds real
+complexity under concurrent (`fast`/`regular`) dispatch and isn't justified yet by more than this one
+run's evidence (see "Rejected"). What shipped instead, `arwyl-extras` `0.3.3` → `0.3.4`:
+
+- `investigator` gains the `Write` tool, narrowly: its dispatch brief now assigns a single per-branch
+  result-file path, and it is instructed to write its full findings there and return only a short pointer
+  + bottom-line in its report — prompt-enforced, not permission-enforced, the same honesty class as the
+  branch-boundary discipline this skill already relies on prose for. A Write failure falls back to
+  reporting in full, so a broken write never silently drops findings.
+- The checklist file's "Checkpointed findings" now link to each branch's result file instead of inlining
+  it — killing the hop-2 duplication (the `Edit` sizes measured above).
+- `SKILL.md` step 4 (persistence) now reuses step 3's already-synthesized text instead of re-reading the
+  working file and regenerating it — killing the hop-3 duplication.
+- The manifest now records each branch's exact subagent transcript file path at dispatch time (not just
+  the shared subagents directory once at the top), and "Resuming an interrupted run" now tries a direct
+  transcript read first, same-session or cross-session/cross-account alike, before considering
+  `SendMessage`-by-ID — the ordering this run actually needed.
+- `SKILL.md` step 4 gained an explicit cleanup offer: once persistence succeeds, ask whether to delete the
+  now-superseded working checklist file (and per-branch result files).
 
 ## Rejected
 
@@ -197,6 +247,13 @@ experimental `arwyl-extras/workflows/*.js` alternative left as an open, not-yet-
 - **An effort-level vocabulary matching `/code-review`'s full low/medium/high/xhigh/max/ultra ladder** —
   three levels cover the breadth/depth tradeoff this evidence supports; a finer ladder can be added if a
   real case shows these three don't discriminate enough.
+- **A `PreToolUse`-hook-enforced per-branch write scope**, added 2026-09-01 — the mechanically-correct
+  version of the write-duplication fix, checking each `Write`/`Edit` call against a live agent-id→path
+  manifest and denying anything outside it. Not shipped: it needs a way to identify which dispatched
+  subagent a given tool call belongs to and keep the manifest current under concurrent (`fast`/`regular`)
+  dispatch, and one run's evidence doesn't justify that complexity yet against this repo's own mechanism
+  bar (`decision-mechanism-over-prose.md`). Shipped instead: the prompt-scoped version (see "Why"). **Named
+  trigger to revisit:** `investigator` writing outside its assigned path in a real run.
 
 ## Consequences accepted
 
@@ -215,14 +272,24 @@ experimental `arwyl-extras/workflows/*.js` alternative left as an open, not-yet-
   `audit-2026-09-01-thorough-resume-design.md`) showed checkpoint-on-verified-notification, not
   concurrency, is what prevents loss, and that a resume-by-agent-ID mechanism genuinely works both
   same-session and (tested once, at small scale) cross-session. `arwyl-extras` bumped `0.3.2` → `0.3.3`.
-- **Still open, not closed by `0.3.3`**: cross-session resume is verified at small scale only, not against
-  a real multi-megabyte `investigator` transcript or a transcript actually cut off by a usage-limit hit
-  (vs. a clean completion) — treated as best-effort with a fresh-dispatch fallback, not guaranteed; the
-  branch(es) actually in flight at the moment of an interruption are still lost outright regardless of
-  speed (no mid-generation checkpoint is possible, only post-completion); the cost warning still doesn't
-  name a session-limit number for non-API accounts; and `max`'s cost (finer branches *plus* a full verify
-  wave) has never actually run to confirm it's the several-times-`deep` estimate in the incident file, not
-  measured.
+- **Write-scoping + resume-ordering fix shipped, same day, 2026-09-01**: a second real `deep` run
+  (`audit-2026-09-01-thorough-gym-live-run.md`) hit the session limit a second time (this time at `slow`),
+  measured the write-token duplication directly (triples, not doubles), and surfaced a real cross-account
+  resume case that bypassed the documented `SendMessage`-by-ID mechanism entirely in favor of direct
+  transcript-reading — `arwyl-extras` bumped `0.3.3` → `0.3.4`. Fixed: prompt-scoped `Write` for
+  `investigator`, per-branch result files, transcript-read-first resume ordering, and a persistence
+  cleanup offer (see "Why"). `investigator`'s read-only design is now narrowly relaxed (one `Write`, one
+  assigned path, prompt-enforced) — a real departure from its original "no editing tools" framing,
+  accepted because the cost it removes is measured, not assumed, and the fallback (report in full if the
+  write fails) keeps the read-only design's actual guarantee — findings are never silently dropped —
+  intact.
+- **Still open, not closed by `0.3.4`**: `SendMessage`-by-agent-ID resume — cross-session-same-account
+  (tested, `audit-2026-09-01-thorough-resume-design.md`) vs. cross-account (never actually attempted; the
+  one real case fell back to transcript-reading before trying it) — remains a real gap in what's verified;
+  the prompt-scoped `Write` restriction on `investigator` is not harness-enforced, only instructed (see
+  "Rejected" — the `PreToolUse`-hook version); the cost warning still doesn't name a session-limit number
+  for non-API accounts; and `max`'s cost (finer branches *plus* a full verify wave) has never actually run
+  to confirm it's the several-times-`deep` estimate in the incident file, not measured.
 - A second local-transcript search of this depth is expensive (two background passes, ~108
   transcripts); not a pattern to repeat casually for every future plugin addition — reserved for
   proposals of this size.
@@ -231,6 +298,8 @@ experimental `arwyl-extras/workflows/*.js` alternative left as an open, not-yet-
 
 ## Deliberation
 
+- `audit-2026-09-01-thorough-gym-live-run.md` — the second real `deep` run: write-token duplication
+  measured directly, a real cross-account resume case, and the `0.3.4` fixes it justified.
 - `audit-2026-09-01-thorough-resume-design.md` — the five live tests behind the `0.3.3` speed-lever and
   resume design: notification independence/duplication, subagent transcript path stability, same- and
   cross-session resume-by-ID, and the `$CLAUDE_CODE_SESSION_ID` env var.
