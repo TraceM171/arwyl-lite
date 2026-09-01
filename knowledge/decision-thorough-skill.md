@@ -1,6 +1,9 @@
 # Leveled `thorough` skill for `arwyl-extras`
 
-**Status:** ACTIVE since 2026-08-31
+**Status:** ACTIVE since 2026-08-31 (reaffirmed 2026-09-01 — dispatch redesigned twice same day after a
+real cost/loss incident: first to sequential-only, then to a speed lever + resume design once live tests
+showed the sequential-only fix was more conservative than the evidence required — see "Why",
+`incident-2026-09-01-thorough-deep-session-limit.md`, `audit-2026-09-01-thorough-resume-design.md`)
 **Decision:** Ship a new `thorough` skill plus a dispatched `investigator` subagent in `arwyl-extras`
 (`arwyl-extras/skills/thorough/`, `arwyl-extras/agents/investigator.md`) — not `arwyl-lite`, per the
 same no-knowledge-tree-dependency split test as `decision-plugin-split.md`. Domain-agnostic: research,
@@ -11,8 +14,13 @@ depth:
 
 - **`standard`** (default) — write the task's surface to a checklist file before doing anything else,
   then work it single-handed, citing evidence and chasing each item past its first plausible finding.
-- **`deep`** — the same enumeration, then fans the checklist out to parallel `investigator` dispatches
-  (cap ~6 branches), one per branch, narrow scope buying real depth per branch.
+- **`deep`** — the same enumeration, then works the checklist through `investigator` dispatches (cap ~6
+  branches), checkpointing each branch's findings to a durable manifest file the moment its completion
+  notification is verified, at every speed — narrow scope buying real depth per branch, checkpoint-on-
+  notification buying real survivability of a mid-run interruption. A `speed` lever (`fast`/`regular`/
+  `slow`, default `regular`) controls how many branches may be simultaneously outstanding, trading
+  wall-clock speed against how much an interruption can lose. An interrupted run can be resumed, same
+  session or a different one, via the manifest and a resume-by-agent-ID mechanism.
 - **`max`** — finer decomposition (cap ~10-12 branches) plus an adversarial verification round that
   grades every finding CONFIRMED/UNCONFIRMED before it's reported.
 
@@ -63,7 +71,7 @@ but shallow) as distinct failure shapes, not one problem with one fix.
 **External corroboration, same day.** `audit-2026-08-31-thorough-skill-external-techniques.md` checked
 the shipped design against Anthropic's own published multi-agent research system and the wider
 literature. Two production failure modes named there had no guard in the shipped design and were added:
-per-item boundaries carried into `deep`/`max` dispatch briefs, so parallel branches don't quietly
+per-item boundaries carried into `deep`/`max` dispatch briefs, so branches don't quietly
 duplicate each other's work (an observed failure in Anthropic's own system, not a hypothetical); and
 source-quality + "permission to conclude not found" guidance in `investigator.md`, against the same
 system's observed unbounded/low-quality search failures. A third gap the local evidence never
@@ -84,6 +92,84 @@ agents) before relying on them here — not assumed from a single sighting. That
 real and accepted, not that this repo has verified the harness actually enforces them end to end; see
 `status.md`'s Open item — a silently-ignored field would look identical from the outside until a real
 install is tested.
+
+**Checkpoint-on-notification, added 2026-09-01.** The first real `deep` run (`incident-2026-09-01-thorough-deep-session-limit.md`)
+fired all branches in one batch, burned a near-full 5-hour session window, and lost every in-flight
+branch's work outright when the account's usage limit hit mid-run — no partial findings were recoverable.
+Checked live, empirically, with two follow-up test dispatches: every `Agent` dispatch in this harness
+resolves asynchronously, and the harness delivers a completion notification automatically once each agent
+finishes — **independently per agent, even for agents dispatched together in one batch** (a fast test
+branch notified at ~3.5s, a slow one dispatched alongside it notified separately at ~52s). So batching
+does not, by itself, expose every branch for the whole run; what exposes a branch is only that its own
+notification hasn't arrived and been processed yet. The real defect in the original `deep` design was that
+it said to dispatch everything and "collect all reports" before doing anything with them — holding every
+branch's result uncommitted regardless of when each one actually finished, which is what turned the gym
+run's usage-limit hit into a total loss. **The fix is checkpointing each notification the instant it
+arrives; concurrency is a separate, secondary dial**, not the mechanism that prevents loss. A second thing
+the test dispatches caught: a completion notification can fire more than once for the same agent, and an
+early one is not always the final result (a test branch reported `status: completed` with an interim status
+message before a later notification carried the real answer) — checkpointing must verify a notification
+actually reads like a finished report before marking a branch done.
+
+`deep`/`max` first shipped this as one branch at a time (concurrency capped at 1) — the most conservative
+option, checkpointing each into the checklist file the moment a verified notification arrived. `0.3.1` →
+`0.3.2`. Same day, further live testing (below) showed this was more conservative than the evidence
+required, and replaced it with the fuller speed-lever design.
+
+**Speed lever + resume, added 2026-09-01, same day.** The owner proposed generalizing `0.3.2`'s
+all-or-nothing choice (parallel vs. strictly sequential) into two independent levers — a `speed` dial
+controlling concurrency, and a persistent manifest enabling resume — and asked for it to be checked
+against reality rather than assumed. `audit-2026-09-01-thorough-resume-design.md` records five live tests
+run the same day:
+
+- Batched dispatch **does** deliver independent per-agent completion notifications, not one joint
+  notification once everything finishes (confirmed: two agents dispatched together notified separately,
+  ~3.5s and ~52s apart) — meaning `0.3.2`'s own stated rationale (batching itself exposes every branch)
+  was wrong. Checkpoint-on-notification is the actual mechanism; concurrency only controls how many
+  branches are simultaneously *exposed* (dispatched but not yet checkpointed) at once — a real
+  speed/exposure tradeoff, not a correctness fix. This justified reintroducing concurrency as a `speed`
+  lever (`fast`/`regular`/`slow`, default `regular` — up to `ceil(cap/2)` branches outstanding at once,
+  refilling as each is checkpointed) rather than leaving `deep`/`max` sequential-only.
+- A completion notification can fire more than once, and an early one is not always final (confirmed: an
+  interim status message arrived before the real answer) — checkpointing must verify a notification reads
+  like a finished report before marking a branch done, at every speed.
+- Subagent transcript paths are documented and stable (`code.claude.com/docs/en/sub-agents`):
+  `~/.claude/projects/{project}/{sessionId}/subagents/agent-{agentId}.jsonl` + a `.meta.json` companion.
+  `SendMessage` to that agent ID resumes it from its own stored transcript with full history retained —
+  confirmed directly, an agent recalled its own prior result from memory with zero tool calls.
+- **This resume mechanism works across a genuinely separate session**, if that session's `subagents/`
+  folder contains a copy of the target transcript — confirmed via a real, isolated test: a fresh session
+  UUID, a copied-in transcript, a real separate `claude -p` process (Haiku, cost $0.0545) that had never
+  dispatched the agent, successfully resumed it and recalled the correct original answer, zero redone
+  work. The transcript's own embedded (mismatched) `sessionId` and a `toolUseId` with no counterpart in
+  the new session's history did not block or visibly corrupt this. **Caveat carried into the design
+  honestly**: one test, one small, cleanly-completed transcript — not verified at the scale of a real
+  `investigator` branch (megabytes) or against a transcript cut off specifically by a usage-limit hit
+  rather than ending cleanly. `thorough/SKILL.md` treats cross-session resume as best-effort with a
+  fresh-dispatch fallback, not a guaranteed mechanism, on this basis.
+- `$CLAUDE_CODE_SESSION_ID` reliably exposes the current session's own ID (confirmed directly) — simpler
+  and more portable than any path-parsing heuristic, and what the manifest now records so a later,
+  different session can find the origin session's transcripts.
+
+`deep`/`max` now: track a manifest (origin session ID, project directory, per-branch status/agent ID) in
+the same durable checklist file; checkpoint on verified notification at whichever speed is running; and
+support resuming an interrupted run, same-session via `SendMessage`-by-ID or cross-session via
+copy-then-`SendMessage`-by-ID with a fresh-dispatch fallback (`thorough/SKILL.md`, "Resuming an
+interrupted run"). `0.3.2` → `0.3.3`.
+
+**Same-day finding: this significantly overlaps a real, native Claude Code feature — "dynamic workflows"
+(`/docs/en/workflows`).** A workflow is a JS script Claude writes that orchestrates many subagents with
+`agent()`/`pipeline()`/`parallel()`, journaled so a run is resumable — but explicitly **only within the
+same session**; the docs state a fresh session "has nothing to replay and starts the workflow over." This
+told us the platform's own native resume would *not* cover the cross-session case on its own — it's why
+the custom `SendMessage`-plus-copied-transcript mechanism above was worth designing and testing rather
+than assuming the native feature already handled it. Workflows also ship native concurrency control,
+per-agent cost visibility, and a large-run cost warning (`/workflows`, >25 agents or >1.5M projected
+tokens) — exactly the visibility whose absence made the gym run's cost invisible until the limit hit.
+Bundled `/deep-research` already does much of what `thorough`'s `deep` level does. Not adopted this pass:
+workflows are gated (opt-in on Pro via `/config`, can be org-disabled), so a workflow-only `thorough` would
+break for consumers without them — this stays a prose skill for now, with whether to also ship an
+experimental `arwyl-extras/workflows/*.js` alternative left as an open, not-yet-decided direction.
 
 ## Rejected
 
@@ -118,6 +204,25 @@ install is tested.
 - `deep`/`max` ship as a reasoned bet, not a validated fix — if a future review finds they don't help
   (or that `standard` alone was already sufficient), that's a real possible outcome, not a contradiction
   of this decision; revisit then rather than treating the bet as proven by having shipped it.
+- **Real-world cost confirmed, 2026-09-01**: the first live `deep` dispatch burned a near-full 5-hour
+  session window in one run (measured tokens/tool-calls, not an estimate) — the bet in "Why" is no
+  longer untested. That same run showed no mid-run checkpointing: all 5 in-flight `investigator`
+  dispatches died with zero findings returned when the limit hit. Fixed same day by moving `deep`/`max`
+  to sequential, checkpointed dispatch (see "Why" — Checkpoint-on-notification, added 2026-09-01);
+  `arwyl-extras` bumped `0.3.1` → `0.3.2`. `incident-2026-09-01-thorough-deep-session-limit.md`.
+- **Speed lever + resume shipped, same day, 2026-09-01**: `0.3.2`'s sequential-only choice was more
+  conservative than the evidence required — five further live tests (see "Why" — Speed lever + resume,
+  `audit-2026-09-01-thorough-resume-design.md`) showed checkpoint-on-verified-notification, not
+  concurrency, is what prevents loss, and that a resume-by-agent-ID mechanism genuinely works both
+  same-session and (tested once, at small scale) cross-session. `arwyl-extras` bumped `0.3.2` → `0.3.3`.
+- **Still open, not closed by `0.3.3`**: cross-session resume is verified at small scale only, not against
+  a real multi-megabyte `investigator` transcript or a transcript actually cut off by a usage-limit hit
+  (vs. a clean completion) — treated as best-effort with a fresh-dispatch fallback, not guaranteed; the
+  branch(es) actually in flight at the moment of an interruption are still lost outright regardless of
+  speed (no mid-generation checkpoint is possible, only post-completion); the cost warning still doesn't
+  name a session-limit number for non-API accounts; and `max`'s cost (finer branches *plus* a full verify
+  wave) has never actually run to confirm it's the several-times-`deep` estimate in the incident file, not
+  measured.
 - A second local-transcript search of this depth is expensive (two background passes, ~108
   transcripts); not a pattern to repeat casually for every future plugin addition — reserved for
   proposals of this size.
@@ -126,6 +231,11 @@ install is tested.
 
 ## Deliberation
 
+- `audit-2026-09-01-thorough-resume-design.md` — the five live tests behind the `0.3.3` speed-lever and
+  resume design: notification independence/duplication, subagent transcript path stability, same- and
+  cross-session resume-by-ID, and the `$CLAUDE_CODE_SESSION_ID` env var.
+- `incident-2026-09-01-thorough-deep-session-limit.md` — first real `deep` dispatch: cost confirmed via
+  measured tokens/tool-calls, hard session limit hit.
 - `audit-2026-08-31-thorough-skill-evidence.md` — the evidence review: the one confirmed failure,
   the clean retest, the counter-instance, and the verdict this decision is built on.
 - `audit-2026-08-31-thorough-skill-external-techniques.md` — same-day external corroboration against

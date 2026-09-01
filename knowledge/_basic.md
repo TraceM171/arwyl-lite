@@ -26,6 +26,8 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `incident-2026-07-31-capture-secret-cleanup-bug.md` | `set -e` silently skipped `capture-secret.sh`'s cleanup on every non-happy-path exit |
 | `incident-2026-07-31-secret-capture-auto-mode-block.md` | `secret-capture` categorically blocked under Claude Code auto mode; works under manual |
 | `incident-2026-08-31-arwyl-extras-invalid-agents-key.md` | `0.3.0` failed to install: explicit `agents` manifest key rejected — no real plugin uses one |
+| `incident-2026-09-01-thorough-deep-session-limit.md` | first real `deep` dispatch: cap/model/effort confirmed as designed, but burned a near-full 5-hour session window |
+| `audit-2026-09-01-thorough-resume-design.md` | five live tests behind the `0.3.3` speed-lever/resume redesign: notification independence, subagent transcript paths, same- and cross-session resume-by-ID |
 | `status.md` | current version, recent changes, open items |
 | `_curated.md` | reserved marker — UTC timestamp of the last `curate` pass, read by the status line |
 | `.local/_basic.md` | owner-specific context |

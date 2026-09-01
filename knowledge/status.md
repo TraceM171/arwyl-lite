@@ -1,23 +1,37 @@
 # Status — Current State
 
-**As of 2026-08-31.**
+**As of 2026-09-01.**
 
 ## Current version
 
-`arwyl-lite` `0.1.25` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.3.1`
+`arwyl-lite` `0.1.25` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.3.3`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
 This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17`. `arwyl-extras`' cache is still `0.2.0`
-— `0.2.1` through `0.3.1` are pushed but not yet reinstalled here; changes through `0.2.2` were verified
+— `0.2.1` through `0.3.3` are pushed but not yet reinstalled here; changes through `0.2.2` were verified
 by running the working-copy scripts directly (real dialogs, real captures), not through the plugin cache
 path. `0.3.0` failed to install outright (invalid `agents` manifest key,
-`incident-2026-08-31-arwyl-extras-invalid-agents-key.md`); `0.3.1` fixes it but is not yet installed or
-verified through the cache path. `installed_plugins.json`-style metadata is not reliable evidence of a
-consumer's actual version, see `stack.md` — trust the cache path or behavioural evidence.
+`incident-2026-08-31-arwyl-extras-invalid-agents-key.md`); `0.3.1` fixed it and was confirmed live
+through a real cache path on a third consumer, 2026-09-01 (`incident-2026-09-01-thorough-deep-session-limit.md`).
+`0.3.2` and `0.3.3` (`thorough` dispatch redesigns) are not yet installed or verified through any cache
+path. `installed_plugins.json`-style metadata is not reliable evidence of a consumer's actual version, see
+`stack.md` — trust the cache path or behavioural evidence.
 
 ## Recent changes
 
+- **2026-09-01** — `thorough` `deep`/`max` gained a `speed` lever (fast/regular/slow), a dispatch
+  manifest, and same-/cross-session resume-by-agent-ID, tested live. `0.3.3`.
+  `audit-2026-09-01-thorough-resume-design.md`.
+- **2026-09-01** — corrected `0.3.2`'s rationale: live tests show batched dispatches *do* notify
+  independently; the real fix is checkpoint-on-notification, not batching. Also found Claude Code's
+  native "dynamic workflows" overlaps this work. `decision-thorough-skill.md`.
+- **2026-09-01** — `thorough` `deep`/`max` now dispatch `investigator` branches one at a time,
+  checkpointing each into the checklist file as it returns, instead of a parallel batch — fixes the
+  all-or-nothing loss below. `0.3.2`. `decision-thorough-skill.md`.
+- **2026-09-01** — first real `deep` dispatch (0.3.1, a third consumer): 5/6 branches, Sonnet 5,
+  `effort:xhigh` confirmed live, but it burned a near-full 5-hour session window mid-run.
+  `incident-2026-09-01-thorough-deep-session-limit.md`.
 - **2026-08-31** — `arwyl-extras` `0.3.0` failed to install entirely: invalid `agents` manifest key
   (no real plugin uses one). Fixed, `0.3.1`.
   `incident-2026-08-31-arwyl-extras-invalid-agents-key.md`.
@@ -87,11 +101,20 @@ consumer's actual version, see `stack.md` — trust the cache path or behavioura
 - Reinstall `arwyl-extras` to `0.3.1` on this machine and on the field-test consumer, then
   re-verify `secret-capture` from the actual cache path (the `0.2.1`–`0.3.1` changes were only verified
   against the working copy directly).
-- The `thorough` skill's `investigator` agent (`effort: xhigh` frontmatter, auto-discovered `agents/`
-  directory) has never been dispatched through a real plugin cache path — the manifest itself now
-  installs cleanly (`0.3.1` fixed the invalid `agents` key that blocked `0.3.0`,
-  `incident-2026-08-31-arwyl-extras-invalid-agents-key.md`), but no level has actually run yet. Run all
-  three levels end-to-end after the next reinstall before calling it field-ready.
+- `standard` and `deep` have now run for real through the `0.3.1` cache path (a third consumer,
+  2026-09-01): `effort:xhigh` confirmed enforced, the ~6-branch cap was respected, no runaway search
+  loop — but `deep` alone hit the account's hard 5-hour session limit mid-run on a near-full budget,
+  and all 5 in-flight `investigator` dispatches died with no findings returned.
+  `incident-2026-09-01-thorough-deep-session-limit.md`. Fixed same day, twice: `0.3.2` shipped
+  sequential-only dispatch, then `0.3.3` replaced it with a `speed` lever + manifest + same-/cross-session
+  resume-by-agent-ID once live tests showed checkpoint-on-notification (not concurrency) was the real
+  mechanism (`decision-thorough-skill.md`, `audit-2026-09-01-thorough-resume-design.md`) — neither version
+  installed or verified through any real cache path yet. Still open: cross-session resume is verified at
+  small scale only, not against a real multi-megabyte transcript or one actually cut off by a usage-limit
+  hit; the branch(es) in flight at the exact moment of an interruption are still lost outright regardless
+  of speed (no mid-generation checkpoint is possible, only post-completion); `max` has never run for real
+  (finer branches *plus* a full verify wave — likely several times `deep`'s measured cost, unconfirmed);
+  and the cost warning still doesn't name a session-limit number for non-API accounts.
 - `secret-capture`'s macOS (`osascript`) and Windows dialog paths are unverified — only the Linux
   X11/Wayland `zenity` path has a real end-to-end test. Confirm or fix when either platform is next used.
 - `secret-capture` deliberately ships without a guard hook or an MCP-tool interface — both are scope
