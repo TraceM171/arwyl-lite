@@ -2,8 +2,10 @@
 
 **Status:** ACTIVE since 2026-08-31 (reaffirmed 2026-09-01, twice — first the dispatch redesign below, then
 again same day after a second real `deep` run measured write-token duplication and a cross-account resume
-gap; see "Why", `incident-2026-09-01-thorough-deep-session-limit.md`,
-`audit-2026-09-01-thorough-resume-design.md`, `audit-2026-09-01-thorough-gym-live-run.md`)
+gap; and again 2026-09-02 after a fourth consumer's `deep` run completed fully for the first time and
+surfaced two more real fixes; see "Why", `incident-2026-09-01-thorough-deep-session-limit.md`,
+`audit-2026-09-01-thorough-resume-design.md`, `audit-2026-09-01-thorough-gym-live-run.md`,
+`audit-2026-09-02-field-study-ai-setup.md`)
 **Decision:** Ship a new `thorough` skill plus a dispatched `investigator` subagent in `arwyl-extras`
 (`arwyl-extras/skills/thorough/`, `arwyl-extras/agents/investigator.md`) — not `arwyl-lite`, per the
 same no-knowledge-tree-dependency split test as `decision-plugin-split.md`. Domain-agnostic: research,
@@ -221,6 +223,43 @@ run's evidence (see "Rejected"). What shipped instead, `arwyl-extras` `0.3.3` �
 - `SKILL.md` step 4 gained an explicit cleanup offer: once persistence succeeds, ask whether to delete the
   now-superseded working checklist file (and per-branch result files).
 
+**First full `deep` completion, observed live in a fourth consumer, two more real fixes, added
+2026-09-02.** `audit-2026-09-02-field-study-ai-setup.md` watched a real `deep`/`regular` run (unrelated
+consumer, `AI-setup`) to completion — the first observed to finish all branches, synthesize, and reach
+the persistence offer without hitting a session/usage limit, confirming the pre-flight line, the
+`regular` sliding window, and checkpoint-on-notification all hold as designed across a full 6-branch
+run. Two gaps surfaced, both confirmed at the file's final state, not mid-run artifacts:
+
+- **A "finished"/"launched" branch never actually collapses to the single status line step 1
+  describes** — the checkpoint step edits a *different* line (the one already touched at dispatch) and
+  never revisits the original enumeration-time `Status: pending` line, so every branch ends up carrying
+  two disagreeing `Status:` values for the life of the run (6 of 6, confirmed at completion). A resume
+  pass reads this exact manifest to decide what to re-dispatch — untested here (the run never needed
+  resuming) but a real ambiguity sitting in the file regardless.
+- **`investigator`'s returned report isn't "2–4 sentences" in practice** — measured 1240–2513 characters
+  across all 6 dispatches in this run, 3–5× the stated bound, one with a bulleted sub-list. The
+  orchestrator reuses this near-verbatim as the checklist's "bottom-line," so part of `0.3.4`'s
+  write-duplication fix erodes (~1.2–2.5KB/branch of checklist overshoot, against the 13–21KB/branch the
+  prior fix already eliminated — the core fix holds; this is a smaller, real slice of it leaking back).
+
+Both fixed as prose/structure, not new mechanisms — per `decision-mechanism-over-prose.md`'s bar, N=1
+run (6 dispatches within it) doesn't justify a harness-enforced check for either. `arwyl-extras` `0.3.4`
+→ `0.3.5`:
+
+- `SKILL.md` step 1 now defines exactly one status-bearing line per branch, extended in place through
+  `pending` → `launched` → `finished` rather than annotated by a second line; step 2b's dispatch and
+  checkpoint instructions reworded to match. The Scope/boundary/lettered sub-items are explicitly *not*
+  touched by this — a wrong first draft of this fix collapsed them away, caught by checking what
+  `audit-2026-09-01-thorough-gym-live-run.md`'s 13–21KB measurement actually was (the findings-text
+  re-write `0.3.4` already killed, not the enumeration).
+- `investigator.md`'s report instruction tightened from "2–4 sentences" to **one sentence** as a hard
+  target, with an explicit escape hatch: if compressing a finding to one sentence feels lossy, that
+  nuance belongs in the results file, not the report.
+- `field-study/SKILL.md` gained a liveness caution: a subagent's own transcript looking stale mid-run
+  isn't evidence of an interrupted `deep` run — check the orchestrating session's own transcript
+  (recency, `pendingBackgroundAgentCount`) before diagnosing one. (Learned the hard way, same study —
+  see its Method notes.)
+
 ## Rejected
 
 - **A blanket mandatory mechanism (fan-out always-on, no levels)** — the evidence bar this repo already
@@ -295,9 +334,20 @@ run's evidence (see "Rejected"). What shipped instead, `arwyl-extras` `0.3.3` �
   proposals of this size.
 - Renaming same-day, before any install/publish, cost nothing beyond the edit itself — recorded here
   as a scope correction, not as a second shipped version needing its own audit.
+- **First full `deep` completion confirmed, fourth consumer, 2026-09-02**: unlike both prior real
+  dispatches, this run finished all 6 branches, synthesized, and reached the persistence offer without
+  hitting a session/usage limit — real evidence the checkpoint-on-notification + `regular`-speed design
+  can complete end-to-end, at least at this task's cost profile. Two more real gaps found and fixed the
+  same way as before (prose/structure, not a new mechanism): a branch's checklist entry wasn't actually
+  collapsing to one status line as designed (two disagreeing `Status:` fields per branch, 6 of 6), and
+  `investigator`'s returned report ran 3–5× over its "2–4 sentences" bound, eroding a slice of `0.3.4`'s
+  write-duplication fix. `arwyl-extras` bumped `0.3.4` → `0.3.5`. `audit-2026-09-02-field-study-ai-setup.md`.
+  Still not exercised by this run: resume (never needed it) and `max`.
 
 ## Deliberation
 
+- `audit-2026-09-02-field-study-ai-setup.md` — first observed full `deep` completion (a fourth,
+  unrelated consumer): the checklist-collapse and investigator-report-length fixes behind `0.3.5`.
 - `audit-2026-09-01-thorough-gym-live-run.md` — the second real `deep` run: write-token duplication
   measured directly, a real cross-account resume case, and the `0.3.4` fixes it justified.
 - `audit-2026-09-01-thorough-resume-design.md` — the five live tests behind the `0.3.3` speed-lever and

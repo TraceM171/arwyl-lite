@@ -29,6 +29,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `incident-2026-09-01-thorough-deep-session-limit.md` | first real `deep` dispatch: cap/model/effort confirmed as designed, but burned a near-full 5-hour session window |
 | `audit-2026-09-01-thorough-resume-design.md` | five live tests behind the `0.3.3` speed-lever/resume redesign: notification independence, subagent transcript paths, same- and cross-session resume-by-ID |
 | `audit-2026-09-01-thorough-gym-live-run.md` | second real `deep` run: write-token duplication measured (triples), a real cross-account resume case that bypassed `SendMessage`-by-ID, `0.3.4` fixes |
+| `audit-2026-09-02-field-study-ai-setup.md` | first full `deep` completion (a fourth consumer): a non-collapsing checklist status line and an over-length `investigator` report, both fixed in `0.3.5` |
 | `status.md` | current version, recent changes, open items |
 | `_curated.md` | reserved marker — UTC timestamp of the last `curate` pass, read by the status line |
 | `.local/_basic.md` | owner-specific context |

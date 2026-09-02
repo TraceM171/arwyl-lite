@@ -57,6 +57,8 @@ Draw from as many of these as exist:
 
 **c. Agent behaviour in session transcripts** (the richest source, when available). This is where the field reviews found the sharpest rules — agents making failed direct-read attempts for a file that only exists in the plugin cache (16 in one review), acting on a stale `status.md` assumption, or batching learnings instead of capturing live. Look for: instructions that did not produce the intended behaviour, tool calls wasted, files that should have been read and weren't, the consultation contract ignored.
 
+**Liveness caution, learned the hard way (`audit-2026-09-02-field-study-ai-setup.md`):** if a consumer has a `thorough` `deep`/`max` run with branches still `launched`, do not conclude it's interrupted from subagent transcripts alone — a subagent's transcript can look stale mid-research and its results file can still be empty simply because it hasn't finished yet, not because anything died. Check the **orchestrating session's own transcript** for recency/advancement (its last event's timestamp, `pendingBackgroundAgentCount`) before diagnosing an interruption; a subagent dispatch in this harness keeps running toward completion independently of how it's currently being observed.
+
 **d. The focus areas** from the arguments. Investigate each with evidence. If the real logs neither confirm nor deny a suspected gap, say so plainly — and consider a synthetic test (step 5) rather than guessing.
 
 ### 4. Diagnose and classify each finding
