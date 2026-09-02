@@ -8,21 +8,14 @@
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
-This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17`. `arwyl-extras`' cache is still `0.2.0`
-— `0.2.1` through `0.3.4` are pushed but not yet reinstalled here; changes through `0.2.2` were verified
-by running the working-copy scripts directly (real dialogs, real captures), not through the plugin cache
-path. `0.3.0` failed to install outright (invalid `agents` manifest key,
-`incident-2026-08-31-arwyl-extras-invalid-agents-key.md`); `0.3.1` fixed it and was confirmed live
-through a real cache path on a third consumer, 2026-09-01 (`incident-2026-09-01-thorough-deep-session-limit.md`).
-`0.3.3` is now also confirmed live through a real cache path (same third consumer, a second `deep`/`slow`
-run the same day — speed lever observed in use — `audit-2026-09-01-thorough-gym-live-run.md`). `0.3.2`
-(superseded same-day) was never separately installed or verified through any cache path. `0.3.4`
-(the write-scoping/resume-ordering fix that same run's evidence produced) is now confirmed live through a
-real cache path on a fourth, unrelated consumer (`AI-setup`, a completed `deep`/`regular` run,
-2026-09-02 — `audit-2026-09-02-field-study-ai-setup.md`). `0.3.5` (that same study's two fixes) is not
-yet installed or verified through any cache path. `installed_plugins.json`-style metadata is not
-reliable evidence of a consumer's actual version, see `stack.md` — trust the cache path or behavioural
-evidence.
+This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17`; `arwyl-extras`' cache is still
+`0.2.0`, not yet reinstalled here (changes through `0.2.2` were verified by running the working-copy
+scripts directly, not through the plugin cache path). Of the versions since, `0.3.1`, `0.3.3`, and `0.3.4`
+are each confirmed live through a real cache path on a real consumer — see Recent changes below for which
+run confirmed each, and the linked incident/audit files for the evidence; `0.3.2` (superseded same-day)
+and `0.3.5` (not yet installed anywhere) are not cache-verified. `installed_plugins.json`-style metadata
+is not reliable evidence of a consumer's actual version — see `stack.md` — trust the cache path or
+behavioural evidence.
 
 ## Recent changes
 
@@ -110,26 +103,13 @@ evidence.
 
 ## Open
 
-- Reinstall `arwyl-extras` to `0.3.1` on this machine and on the field-test consumer, then
-  re-verify `secret-capture` from the actual cache path (the `0.2.1`–`0.3.1` changes were only verified
-  against the working copy directly).
-- `standard` and `deep` have now run for real, twice, through the `0.3.1`/`0.3.3` cache path (a third
-  consumer, both 2026-09-01): `effort:xhigh` and the ~6-branch cap confirmed both times; the second run
-  hit the account's session limit again, this time at `slow` — checkpoint-on-notification held (branches
-  1–3 survived), and the "lost" branch was recovered for free from its own raw transcript.
-  `incident-2026-09-01-thorough-deep-session-limit.md`, `audit-2026-09-01-thorough-gym-live-run.md`.
-  Fixed same day, three times: `0.3.2` sequential-only, `0.3.3` speed lever + resume-by-agent-ID,
-  `0.3.4` prompt-scoped `investigator` `Write` (kills the measured write-token triplication) +
-  transcript-read-first resume ordering + a persistence cleanup offer — `0.3.1`, `0.3.3`, and now `0.3.4`
-  (a fourth, unrelated consumer, `AI-setup`, 2026-09-02) verified through a real cache path. That run
-  completed fully — all 6 branches, synthesis, and the persistence offer — with no session-limit hit,
-  the first real `deep` dispatch to do so; it found two more real gaps (fixed in `0.3.5`, not yet cache-
-  verified) but exercised neither resume nor `max`. Still open: `SendMessage`-by-agent-ID resume is
-  untested across accounts (only same-account, and only the transcript-read fallback was actually
-  exercised cross-account); the `Write` scoping is prompt-enforced, not harness-enforced (Claude Code has
-  no per-path tool-permission grant to fall back on); `max` has never run for real; and the cost warning
-  still doesn't name a session-limit number for non-API accounts. `decision-thorough-skill.md`,
-  `audit-2026-09-02-field-study-ai-setup.md`.
+- Reinstall `arwyl-extras` (latest) on this machine and on the field-test consumer, then re-verify
+  `secret-capture` from the actual cache path (the `0.2.1`–`0.3.1` changes were only verified against the
+  working copy directly).
+- `thorough` `deep`: real-world-verified across four consumers, including one full completion with no
+  session-limit hit (`0.3.5`). Still open: cross-account resume, harness-enforced write scoping, `max`
+  unrun, no session-limit figure in the cost warning — full list in `decision-thorough-skill.md`'s
+  "Consequences accepted".
 - `secret-capture`'s macOS (`osascript`) and Windows dialog paths are unverified — only the Linux
   X11/Wayland `zenity` path has a real end-to-end test. Confirm or fix when either platform is next used.
 - `secret-capture` deliberately ships without a guard hook or an MCP-tool interface — both are scope

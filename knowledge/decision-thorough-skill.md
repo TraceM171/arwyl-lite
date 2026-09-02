@@ -98,23 +98,17 @@ real and accepted, not that this repo has verified the harness actually enforces
 `status.md`'s Open item — a silently-ignored field would look identical from the outside until a real
 install is tested.
 
-**Checkpoint-on-notification, added 2026-09-01.** The first real `deep` run (`incident-2026-09-01-thorough-deep-session-limit.md`)
-fired all branches in one batch, burned a near-full 5-hour session window, and lost every in-flight
-branch's work outright when the account's usage limit hit mid-run — no partial findings were recoverable.
-Checked live, empirically, with two follow-up test dispatches: every `Agent` dispatch in this harness
-resolves asynchronously, and the harness delivers a completion notification automatically once each agent
-finishes — **independently per agent, even for agents dispatched together in one batch** (a fast test
-branch notified at ~3.5s, a slow one dispatched alongside it notified separately at ~52s). So batching
-does not, by itself, expose every branch for the whole run; what exposes a branch is only that its own
-notification hasn't arrived and been processed yet. The real defect in the original `deep` design was that
-it said to dispatch everything and "collect all reports" before doing anything with them — holding every
-branch's result uncommitted regardless of when each one actually finished, which is what turned the gym
-run's usage-limit hit into a total loss. **The fix is checkpointing each notification the instant it
-arrives; concurrency is a separate, secondary dial**, not the mechanism that prevents loss. A second thing
-the test dispatches caught: a completion notification can fire more than once for the same agent, and an
-early one is not always the final result (a test branch reported `status: completed` with an interim status
-message before a later notification carried the real answer) — checkpointing must verify a notification
-actually reads like a finished report before marking a branch done.
+**Checkpoint-on-notification, added 2026-09-01.** The first real `deep` run
+(`incident-2026-09-01-thorough-deep-session-limit.md`) dispatched all branches in one batch and waited to
+"collect all reports" before doing anything with them; when the account's usage limit hit mid-run, every
+in-flight branch was lost outright, with zero findings recoverable. Two live test dispatches
+(`audit-2026-09-01-thorough-resume-design.md`, Findings 1–2) showed batching itself was never the real
+exposure mechanism — the harness delivers a completion notification independently per agent, even for
+agents dispatched together, so what exposes a branch is only that its own notification hasn't been
+processed yet. **The fix is checkpointing each notification the instant it verifiably arrives; concurrency
+is a separate, secondary dial**, not what prevents loss — and a notification can fire more than once, with
+an early one not always the final result, so checkpointing must verify a notification reads like a
+finished report before marking a branch done.
 
 `deep`/`max` first shipped this as one branch at a time (concurrency capped at 1) — the most conservative
 option, checkpointing each into the checklist file the moment a verified notification arrived. `0.3.1` →
@@ -123,38 +117,18 @@ required, and replaced it with the fuller speed-lever design.
 
 **Speed lever + resume, added 2026-09-01, same day.** The owner proposed generalizing `0.3.2`'s
 all-or-nothing choice (parallel vs. strictly sequential) into two independent levers — a `speed` dial
-controlling concurrency, and a persistent manifest enabling resume — and asked for it to be checked
-against reality rather than assumed. `audit-2026-09-01-thorough-resume-design.md` records five live tests
-run the same day:
-
-- Batched dispatch **does** deliver independent per-agent completion notifications, not one joint
-  notification once everything finishes (confirmed: two agents dispatched together notified separately,
-  ~3.5s and ~52s apart) — meaning `0.3.2`'s own stated rationale (batching itself exposes every branch)
-  was wrong. Checkpoint-on-notification is the actual mechanism; concurrency only controls how many
-  branches are simultaneously *exposed* (dispatched but not yet checkpointed) at once — a real
-  speed/exposure tradeoff, not a correctness fix. This justified reintroducing concurrency as a `speed`
-  lever (`fast`/`regular`/`slow`, default `regular` — up to `ceil(cap/2)` branches outstanding at once,
-  refilling as each is checkpointed) rather than leaving `deep`/`max` sequential-only.
-- A completion notification can fire more than once, and an early one is not always final (confirmed: an
-  interim status message arrived before the real answer) — checkpointing must verify a notification reads
-  like a finished report before marking a branch done, at every speed.
-- Subagent transcript paths are documented and stable (`code.claude.com/docs/en/sub-agents`):
-  `~/.claude/projects/{project}/{sessionId}/subagents/agent-{agentId}.jsonl` + a `.meta.json` companion.
-  `SendMessage` to that agent ID resumes it from its own stored transcript with full history retained —
-  confirmed directly, an agent recalled its own prior result from memory with zero tool calls.
-- **This resume mechanism works across a genuinely separate session**, if that session's `subagents/`
-  folder contains a copy of the target transcript — confirmed via a real, isolated test: a fresh session
-  UUID, a copied-in transcript, a real separate `claude -p` process (Haiku, cost $0.0545) that had never
-  dispatched the agent, successfully resumed it and recalled the correct original answer, zero redone
-  work. The transcript's own embedded (mismatched) `sessionId` and a `toolUseId` with no counterpart in
-  the new session's history did not block or visibly corrupt this. **Caveat carried into the design
-  honestly**: one test, one small, cleanly-completed transcript — not verified at the scale of a real
-  `investigator` branch (megabytes) or against a transcript cut off specifically by a usage-limit hit
-  rather than ending cleanly. `thorough/SKILL.md` treats cross-session resume as best-effort with a
-  fresh-dispatch fallback, not a guaranteed mechanism, on this basis.
-- `$CLAUDE_CODE_SESSION_ID` reliably exposes the current session's own ID (confirmed directly) — simpler
-  and more portable than any path-parsing heuristic, and what the manifest now records so a later,
-  different session can find the origin session's transcripts.
+controlling concurrency, and a persistent manifest enabling resume — checked against reality via five
+live tests (`audit-2026-09-01-thorough-resume-design.md`): checkpoint-on-verified-notification, not
+concurrency, is what prevents loss, which justified reintroducing concurrency as a genuine
+speed/exposure tradeoff (`speed`: `fast`/`regular`/`slow`, default `regular`, up to `ceil(cap/2)` branches
+outstanding at once, refilling as each is checkpointed) rather than leaving `deep`/`max` sequential-only;
+subagent transcript paths are documented and stable, and `SendMessage`-by-agent-ID genuinely resumes a
+finished agent from its own retained history with zero redone work — confirmed same-session, and once, at
+small scale, across a genuinely separate session (one small, cleanly-completed transcript; not verified at
+real-branch scale or against a usage-limit-killed transcript, so `thorough/SKILL.md` treats cross-session
+resume as best-effort with a fresh-dispatch fallback, not guaranteed). `$CLAUDE_CODE_SESSION_ID` reliably
+exposes the current session's own ID, and the manifest now records it so a later, different session can
+find the origin session's transcripts.
 
 `deep`/`max` now: track a manifest (origin session ID, project directory, per-branch status/agent ID) in
 the same durable checklist file; checkpoint on verified notification at whichever speed is running; and
@@ -164,40 +138,30 @@ interrupted run"). `0.3.2` → `0.3.3`. (`0.3.4`, below, adds per-branch results
 to try a direct transcript read before `SendMessage`.)
 
 **Same-day finding: this significantly overlaps a real, native Claude Code feature — "dynamic workflows"
-(`/docs/en/workflows`).** A workflow is a JS script Claude writes that orchestrates many subagents with
-`agent()`/`pipeline()`/`parallel()`, journaled so a run is resumable — but explicitly **only within the
-same session**; the docs state a fresh session "has nothing to replay and starts the workflow over." This
-told us the platform's own native resume would *not* cover the cross-session case on its own — it's why
-the custom `SendMessage`-plus-copied-transcript mechanism above was worth designing and testing rather
-than assuming the native feature already handled it. Workflows also ship native concurrency control,
-per-agent cost visibility, and a large-run cost warning (`/workflows`, >25 agents or >1.5M projected
-tokens) — exactly the visibility whose absence made the gym run's cost invisible until the limit hit.
-Bundled `/deep-research` already does much of what `thorough`'s `deep` level does. Not adopted this pass:
-workflows are gated (opt-in on Pro via `/config`, can be org-disabled), so a workflow-only `thorough` would
-break for consumers without them — this stays a prose skill for now, with whether to also ship an
-experimental `arwyl-extras/workflows/*.js` alternative left as an open, not-yet-decided direction.
+(`/docs/en/workflows`)** — journaled subagent orchestration with native concurrency control, per-agent
+cost visibility, and a large-run cost warning, but explicitly resumable only within the same session
+(`audit-2026-09-01-thorough-resume-design.md`, Finding 7) — confirming the cross-session gap this design's
+custom `SendMessage`-plus-copied-transcript mechanism exists to close, and that the visibility whose
+absence made the gym run's cost invisible is a solved problem natively. Bundled `/deep-research` already
+does much of what `thorough`'s `deep` level does. Not adopted this pass: workflows are gated (opt-in on
+Pro via `/config`, org-disableable), so a workflow-only `thorough` would break for consumers without
+them — this stays a prose skill for now, with whether to also ship an experimental
+`arwyl-extras/workflows/*.js` alternative left as an open, not-yet-decided direction.
 
 **Second real `deep` run, write-token duplication measured, cross-account resume gap found, added
 2026-09-01.** A second real `deep`/`slow` run (`audit-2026-09-01-thorough-gym-live-run.md`) hit the
-account's session limit a second time — mid-run again, this time at `slow` speed, confirming the loss is
-driven by total token spend, not concurrency. Checkpoint-on-notification held: branches 1–3 survived. Two
-new things were measured, not previously evidenced:
-
-- **Write-token duplication is real and triples, not doubles.** A branch's subagent generates its findings
-  once (output tokens, in the `<task-notification>`); the orchestrator then re-emits a condensed version via
-  `Edit` to checkpoint it into the working file (13–21KB per branch, measured); `SKILL.md` step 4 then
-  `Read` the whole working file back into context and `Write`ed a fresh ~110KB permanent knowledge file —
-  a third re-emission of the same material. Confirmed the owner's own diagnosis of this cost, with real
-  numbers behind it for the first time.
-- **The documented cross-session resume mechanism (`SendMessage`-by-copied-agent-ID,
-  `audit-2026-09-01-thorough-resume-design.md`) was distrusted for the cross-*account* case and never
-  attempted.** What worked instead: reading the subagent's own raw transcript `.jsonl` directly with a
-  one-off script and extracting its last real text turn — no live agent, no session/account match needed,
-  just a file path. It also recovered a branch whose notification had arrived in the origin session one
-  turn before the account limit killed the turn that would have checkpointed it — real evidence that
-  `decision-thorough-skill.md`'s prior "lost outright" framing for an in-flight branch overstated the risk:
-  the raw transcript is a free, reliable fallback independent of whether the notification round-trip
-  completed.
+account's session limit again — confirming the loss is driven by total token spend, not concurrency — but
+checkpoint-on-notification held this time (branches 1–3 survived). Two things were measured, not
+previously evidenced: **write-token duplication is real and triples, not doubles** — a branch's subagent
+generates its findings once, the orchestrator's checkpoint `Edit` re-emits a condensed version, then
+`SKILL.md` step 4 re-reads and re-`Write`s the whole thing again as a fresh permanent knowledge file, a
+third re-emission of the same material; and **the documented cross-session resume mechanism was
+distrusted for the cross-account case and never attempted** — reading the subagent's own raw transcript
+`.jsonl` directly substituted itself, no live agent or session/account match needed, and also recovered a
+branch whose notification had arrived one turn before the account limit killed the turn that would have
+checkpointed it — real evidence the prior "lost outright" framing for an in-flight branch overstated the
+risk, since the raw transcript is a free, reliable fallback independent of whether the notification
+round-trip completed.
 
 **Fixes shipped, checked against Claude Code's actual permission model first.** Confirmed via
 `code.claude.com/docs/en/sub-agents`: subagent frontmatter `tools:` is a flat allow-list of tool names, and
@@ -224,23 +188,16 @@ run's evidence (see "Rejected"). What shipped instead, `arwyl-extras` `0.3.3` �
   now-superseded working checklist file (and per-branch result files).
 
 **First full `deep` completion, observed live in a fourth consumer, two more real fixes, added
-2026-09-02.** `audit-2026-09-02-field-study-ai-setup.md` watched a real `deep`/`regular` run (unrelated
-consumer, `AI-setup`) to completion — the first observed to finish all branches, synthesize, and reach
-the persistence offer without hitting a session/usage limit, confirming the pre-flight line, the
-`regular` sliding window, and checkpoint-on-notification all hold as designed across a full 6-branch
-run. Two gaps surfaced, both confirmed at the file's final state, not mid-run artifacts:
-
-- **A "finished"/"launched" branch never actually collapses to the single status line step 1
-  describes** — the checkpoint step edits a *different* line (the one already touched at dispatch) and
-  never revisits the original enumeration-time `Status: pending` line, so every branch ends up carrying
-  two disagreeing `Status:` values for the life of the run (6 of 6, confirmed at completion). A resume
-  pass reads this exact manifest to decide what to re-dispatch — untested here (the run never needed
-  resuming) but a real ambiguity sitting in the file regardless.
-- **`investigator`'s returned report isn't "2–4 sentences" in practice** — measured 1240–2513 characters
-  across all 6 dispatches in this run, 3–5× the stated bound, one with a bulleted sub-list. The
-  orchestrator reuses this near-verbatim as the checklist's "bottom-line," so part of `0.3.4`'s
-  write-duplication fix erodes (~1.2–2.5KB/branch of checklist overshoot, against the 13–21KB/branch the
-  prior fix already eliminated — the core fix holds; this is a smaller, real slice of it leaking back).
+2026-09-02.** `audit-2026-09-02-field-study-ai-setup.md` watched a real `deep`/`regular` run to
+completion for the first time — no session/usage limit hit, confirming the pre-flight disclosure, the
+`regular` sliding window, and checkpoint-on-notification all hold as designed across a full 6-branch run.
+Two gaps surfaced: a branch's checklist entry never actually collapsed to the single status line step 1
+describes — the checkpoint step edits a *different*, already-touched line and never revisits the original
+enumeration-time line, so every branch ends up carrying two disagreeing `Status:` values for the life of
+the run (a real resume ambiguity, though resume was never exercised in this run); and `investigator`'s
+returned report ran several times over its "2–4 sentences" bound, which the orchestrator reuses
+near-verbatim as the checklist bottom-line, eroding a small slice of `0.3.4`'s write-duplication fix (the
+core fix holds — this is a much smaller leak than the duplication it already eliminated).
 
 Both fixed as prose/structure, not new mechanisms — per `decision-mechanism-over-prose.md`'s bar, N=1
 run (6 dispatches within it) doesn't justify a harness-enforced check for either. `arwyl-extras` `0.3.4`
@@ -300,28 +257,18 @@ run (6 dispatches within it) doesn't justify a harness-enforced check for either
 - `deep`/`max` ship as a reasoned bet, not a validated fix — if a future review finds they don't help
   (or that `standard` alone was already sufficient), that's a real possible outcome, not a contradiction
   of this decision; revisit then rather than treating the bet as proven by having shipped it.
-- **Real-world cost confirmed, 2026-09-01**: the first live `deep` dispatch burned a near-full 5-hour
-  session window in one run (measured tokens/tool-calls, not an estimate) — the bet in "Why" is no
-  longer untested. That same run showed no mid-run checkpointing: all 5 in-flight `investigator`
-  dispatches died with zero findings returned when the limit hit. Fixed same day by moving `deep`/`max`
-  to sequential, checkpointed dispatch (see "Why" — Checkpoint-on-notification, added 2026-09-01);
-  `arwyl-extras` bumped `0.3.1` → `0.3.2`. `incident-2026-09-01-thorough-deep-session-limit.md`.
-- **Speed lever + resume shipped, same day, 2026-09-01**: `0.3.2`'s sequential-only choice was more
-  conservative than the evidence required — five further live tests (see "Why" — Speed lever + resume,
-  `audit-2026-09-01-thorough-resume-design.md`) showed checkpoint-on-verified-notification, not
-  concurrency, is what prevents loss, and that a resume-by-agent-ID mechanism genuinely works both
-  same-session and (tested once, at small scale) cross-session. `arwyl-extras` bumped `0.3.2` → `0.3.3`.
-- **Write-scoping + resume-ordering fix shipped, same day, 2026-09-01**: a second real `deep` run
-  (`audit-2026-09-01-thorough-gym-live-run.md`) hit the session limit a second time (this time at `slow`),
-  measured the write-token duplication directly (triples, not doubles), and surfaced a real cross-account
-  resume case that bypassed the documented `SendMessage`-by-ID mechanism entirely in favor of direct
-  transcript-reading — `arwyl-extras` bumped `0.3.3` → `0.3.4`. Fixed: prompt-scoped `Write` for
-  `investigator`, per-branch result files, transcript-read-first resume ordering, and a persistence
-  cleanup offer (see "Why"). `investigator`'s read-only design is now narrowly relaxed (one `Write`, one
-  assigned path, prompt-enforced) — a real departure from its original "no editing tools" framing,
-  accepted because the cost it removes is measured, not assumed, and the fallback (report in full if the
-  write fails) keeps the read-only design's actual guarantee — findings are never silently dropped —
-  intact.
+- **Real-world cost confirmed, 2026-09-01** (see "Why" — Checkpoint-on-notification): the bet in "Why" is
+  no longer untested; fixed same day by moving `deep`/`max` to sequential, checkpointed dispatch.
+  `arwyl-extras` bumped `0.3.1` → `0.3.2`.
+- **Speed lever + resume shipped, same day, 2026-09-01** (see "Why" — Speed lever + resume): `0.3.2`'s
+  sequential-only choice was more conservative than the evidence required. `arwyl-extras` bumped
+  `0.3.2` → `0.3.3`.
+- **Write-scoping + resume-ordering fix shipped, same day, 2026-09-01** (see "Why" — Second real `deep`
+  run and Fixes shipped): `arwyl-extras` bumped `0.3.3` → `0.3.4`. `investigator`'s read-only design is
+  now narrowly relaxed (one `Write`, one assigned path, prompt-enforced) — a real departure from its
+  original "no editing tools" framing, accepted because the cost it removes is measured, not assumed, and
+  the fallback (report in full if the write fails) keeps the read-only design's actual guarantee —
+  findings are never silently dropped — intact.
 - **Still open, not closed by `0.3.4`**: `SendMessage`-by-agent-ID resume — cross-session-same-account
   (tested, `audit-2026-09-01-thorough-resume-design.md`) vs. cross-account (never actually attempted; the
   one real case fell back to transcript-reading before trying it) — remains a real gap in what's verified;
@@ -334,15 +281,10 @@ run (6 dispatches within it) doesn't justify a harness-enforced check for either
   proposals of this size.
 - Renaming same-day, before any install/publish, cost nothing beyond the edit itself — recorded here
   as a scope correction, not as a second shipped version needing its own audit.
-- **First full `deep` completion confirmed, fourth consumer, 2026-09-02**: unlike both prior real
-  dispatches, this run finished all 6 branches, synthesized, and reached the persistence offer without
-  hitting a session/usage limit — real evidence the checkpoint-on-notification + `regular`-speed design
-  can complete end-to-end, at least at this task's cost profile. Two more real gaps found and fixed the
-  same way as before (prose/structure, not a new mechanism): a branch's checklist entry wasn't actually
-  collapsing to one status line as designed (two disagreeing `Status:` fields per branch, 6 of 6), and
-  `investigator`'s returned report ran 3–5× over its "2–4 sentences" bound, eroding a slice of `0.3.4`'s
-  write-duplication fix. `arwyl-extras` bumped `0.3.4` → `0.3.5`. `audit-2026-09-02-field-study-ai-setup.md`.
-  Still not exercised by this run: resume (never needed it) and `max`.
+- **First full `deep` completion confirmed, fourth consumer, 2026-09-02** (see "Why" — First full `deep`
+  completion): real evidence the checkpoint-on-notification + `regular`-speed design can complete
+  end-to-end. `arwyl-extras` bumped `0.3.4` → `0.3.5`. Still not exercised by this run: resume (never
+  needed it) and `max`.
 
 ## Deliberation
 
