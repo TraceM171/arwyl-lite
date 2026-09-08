@@ -247,7 +247,15 @@ def git_status(repo_path):
         )
         name = branch.stdout.strip()
         if branch.returncode != 0 or not name:
-            return None
+            # An unborn branch (freshly `git init`'d, zero commits) fails rev-parse even
+            # though HEAD resolves symbolically — symbolic-ref still finds it.
+            sym = subprocess.run(
+                ["git", "-C", repo_path, "symbolic-ref", "--short", "HEAD"],
+                capture_output=True, text=True, timeout=2,
+            )
+            name = sym.stdout.strip()
+            if sym.returncode != 0 or not name:
+                return None
         diff = subprocess.run(
             ["git", "-C", repo_path, "diff", "--shortstat", "HEAD"],
             capture_output=True, text=True, timeout=2,

@@ -4,7 +4,7 @@
 
 ## Current version
 
-`arwyl-lite` `0.1.25` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.3.5`
+`arwyl-lite` `0.1.26` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.3.5`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
@@ -19,6 +19,9 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-09-02** — statusline: `knowledge:` git segment silently dropped for a `knowledge/` repo with
+  zero commits yet (unborn branch fails `rev-parse`). Fixed via `symbolic-ref` fallback. `0.1.26`.
+  `incident-2026-09-02-statusline-unborn-branch-knowledge-repo.md`.
 - **2026-09-02** — fourth consumer's `deep` run completed fully for the first time (no session limit
   hit); found a non-collapsing checklist status line and an over-length `investigator` report. `0.3.5`.
   `audit-2026-09-02-field-study-ai-setup.md`.
