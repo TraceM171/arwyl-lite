@@ -4,7 +4,7 @@
 
 ## Current version
 
-`arwyl-lite` `0.1.26` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.3.5`
+`arwyl-lite` `0.1.27` (`claude_code/.claude-plugin/plugin.json`); `arwyl-extras` `0.3.5`
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
@@ -19,6 +19,9 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-09-08** — field study of AI-setup: live-capture fan-out — one open vendor question
+  propagated across 5 files, 6x, in one session. Gated in AGENTS.md/KNOWLEDGE_ORG.md. `0.1.27`.
+  `audit-2026-09-08-field-study-ai-setup-live-capture.md`.
 - **2026-09-02** — statusline: `knowledge:` git segment silently dropped for a `knowledge/` repo with
   zero commits yet (unborn branch fails `rev-parse`). Fixed via `symbolic-ref` fallback. `0.1.26`.
   `incident-2026-09-02-statusline-unborn-branch-knowledge-repo.md`.

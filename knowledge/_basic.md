@@ -31,6 +31,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `audit-2026-09-01-thorough-gym-live-run.md` | second real `deep` run: write-token duplication measured (triples), a real cross-account resume case that bypassed `SendMessage`-by-ID, `0.3.4` fixes |
 | `audit-2026-09-02-field-study-ai-setup.md` | first full `deep` completion (a fourth consumer): a non-collapsing checklist status line and an over-length `investigator` report, both fixed in `0.3.5` |
 | `incident-2026-09-02-statusline-unborn-branch-knowledge-repo.md` | `knowledge:` git segment silently dropped for a freshly `git init`'d, zero-commit `knowledge/` repo; fixed in `0.1.26` |
+| `audit-2026-09-08-field-study-ai-setup-live-capture.md` | second field study of AI-setup: live-capture fan-out on unconfirmed conclusions, 6 capture rounds for one open question in one session; fixed in `0.1.27` |
 | `status.md` | current version, recent changes, open items |
 | `_curated.md` | reserved marker — UTC timestamp of the last `curate` pass, read by the status line |
 | `.local/_basic.md` | owner-specific context |
