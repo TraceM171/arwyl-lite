@@ -111,12 +111,14 @@ to fit.
   owner hypothesis rather than an open-ended consumer health check. Same evidentiary bar: every
   claim above traces to a specific tool call, timestamp, or `usage` field in the session
   transcript, not to inference.
-- Two advisor consultations shaped this audit's framing: the first reframed "wrote before
-  verifying" into the sharper "fan-out per capture round" mechanism and caught an arithmetic error
-  in the write-count breakdown and a mis-scoped cost claim (write-turns are cheap; regeneration is
-  the real cost); the second caught that the fix as first drafted blocked `status.md`'s Open line
-  entirely rather than letting it keep the (stable) question while dropping the (churning)
-  candidate name.
+- Several advisor consultations shaped both this audit and the fix under review, each catching a
+  specific error rather than rubber-stamping the prior draft: reframed "wrote before verifying"
+  into the sharper "fan-out per capture round" mechanism; caught an arithmetic error in the
+  write-count breakdown and a mis-scoped cost claim (write-turns are cheap, regeneration is the
+  real cost); caught that the fix as first drafted blocked `status.md`'s Open line entirely rather
+  than letting it keep the (stable) question while dropping the (churning) candidate name; and,
+  after publishing, caught that the version bump left `status.md`'s cache-verification paragraph
+  stale — the same class of error this audit is about, applied to itself.
 - n=1. This session was the worst case available (an open, contested, multi-round investigation),
   not a representative sample — the finding does not claim every `arwyl-lite` session fans out
   writes this way, only that the rule had no mechanism to stop one that does.

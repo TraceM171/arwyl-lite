@@ -1,6 +1,6 @@
 # Status — Current State
 
-**As of 2026-09-02.**
+**As of 2026-09-08.**
 
 ## Current version
 
@@ -8,7 +8,10 @@
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
-This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17`; `arwyl-extras`' cache is still
+This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17`, not reinstalled since —
+`0.1.18`–`0.1.27` (including this release) are unverified via the cache path on this machine, only
+behavioural (the dev-symlink path runs the working copy directly regardless, see
+`incident-2026-09-02-statusline-unborn-branch-knowledge-repo.md`'s Deliberation). `arwyl-extras`' cache is still
 `0.2.0`, not yet reinstalled here (changes through `0.2.2` were verified by running the working-copy
 scripts directly, not through the plugin cache path). Of the versions since, `0.3.1`, `0.3.3`, and `0.3.4`
 are each confirmed live through a real cache path on a real consumer — see Recent changes below for which
