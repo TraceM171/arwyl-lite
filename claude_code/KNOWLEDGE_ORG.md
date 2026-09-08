@@ -336,6 +336,14 @@ A plan file has a fixed shape: a one-line goal, ordered phases each carrying a s
 - **Default — delete it.** Write one final pointer line into `status.md`; git history keeps the record. A fully-resolved plan is no longer current state, and a kind that never drains anything is the wrong home for it.
 - **If it became a record — convert it.** A long multi-phase plan often accretes a real account of what was built: deviations, a device/test matrix, decisions taken mid-flight — and closed dated files may already link to it. Deleting that loses history; leaving it squats the slot. Instead `git mv` it into a dated `audit-` / `deploy-` file in the domain that owns the bulk of the work, repoint the links you can, and note the redirect where a frozen append-only file forbids repointing. It is now a closed dated record — exempt from the mega-file rule — and the reserved name is free.
 
+### A moving conclusion is not yet a status fact
+
+An investigation's current best answer is not the same as a confirmed fact, even once it is the leading candidate. Before writing an answer into `status.md`, `phases.md`, or a domain `_basic.md`, check: *did I already write a different answer there this session?* If so, neither was ready — a candidate still pending a verification step, or one nobody has checked against a constraint already on record (a budget, a decision file, a requirement), stays inside the investigation itself: the audit file doing the work, and — if a decision file for the choice already exists — its `Status: OPEN — <what's blocking it>` line and current-reasoning section. Both are built to hold a moving current-best-guess; `status.md`, `phases.md`, and a domain `_basic.md` are not — they are guaranteed-read and task-site surfaces, and every session that trusts one pays for a conclusion that reverses before anyone acts on it.
+
+`status.md`'s Open line may still name the open question and link to where it is being worked — that is a session-resuming pointer, not a conclusion, and it does not change across revisions. It must not carry the candidate's name: that is the part that keeps changing. Propagate the candidate to `status.md`, `phases.md`, and any domain `_basic.md` it touches once it has cleared the check above — not on every revision.
+
+**The failure this prevents:** a session that fans an unchecked guess out to every governing file, then repeats the fan-out on each reversal, pays in duplicated writes and in readers who trust a conclusion that is still moving. See `AGENTS.md`'s "Capture as you go" for the live-capture trigger this backs.
+
 ### Dated files are append-only
 
 A dated audit or incident file, once closed, is not edited. New findings open a new dated file that references the old one. Corrections to the original go in a new dated file with "Correction:" in the title, not by editing the closed record.
@@ -407,6 +415,7 @@ A restructuring is the wrong time to:
 | Place for retrieval: link cross-cutting constraints from a guaranteed-read file and/or the task sites they govern; keep the mandatory files short | Correctly-filed facts that go unread at the moment they apply |
 | Recent-changes entries: max 300 characters, ends with a link, newest first | `status.md` bloating into a de facto changelog/audit |
 | Open entries are pointers, not plans | `status.md`/backlogs silently absorbing multi-step, multi-session initiatives |
+| A moving conclusion is not yet a status fact | Fanning an unconfirmed guess out to every governing file, then repeating it on each reversal |
 | Top-level is cross-cutting only | Top-level becomes a junk drawer |
 | Per-X convention for collections of instances | The mega-file-that-grows failure mode |
 | Per-X files have a documented structure | Inconsistent per-instance docs |

@@ -31,10 +31,13 @@ except OSError:
 # Raised 8800 -> 9000 in 0.1.22, deliberately: a permanent rule ("Use the file tools for knowledge,
 # not the shell") — knowledge reads/edits must go through Read/Edit/Write so the status line's
 # read/edit tracker and the reflect/curate nudges actually see them; shell cat/sed access is
-# invisible to that transcript scan. With the ~150-char read-instruction line below, worst case is
-# now ~9150 against the 10,000 cap — still ~850 of margin. Keep this in sync with AGENTS_MD_BUDGET
-# in .githooks/pre-commit.
-AGENTS_MD_BUDGET = 9000
+# invisible to that transcript scan.
+# Raised 9000 -> 9300, deliberately: a permanent rule ("A moving conclusion is not yet a confirmed
+# fact") gating status/phases/_basic.md fan-out on unconfirmed investigation conclusions, with the
+# full rule kept in KNOWLEDGE_ORG.md, not inlined — same pattern as the 8500->8800 raise. With the
+# ~150-char read-instruction line below, worst case is now ~9450 against the 10,000 cap — still
+# ~550 of margin. Keep this in sync with AGENTS_MD_BUDGET in .githooks/pre-commit.
+AGENTS_MD_BUDGET = 9300
 context = [agents_md]
 if len(agents_md) > AGENTS_MD_BUDGET:
     context.append(
