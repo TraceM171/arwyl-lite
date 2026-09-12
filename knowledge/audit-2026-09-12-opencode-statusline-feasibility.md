@@ -199,3 +199,10 @@ scope: it is not one yes/no, it's roughly a dozen independent yeses/nos, and sev
 have a working substitute path (server-plugin `tool.execute.after` + `showToast`, already-confirmed tool
 arg shapes from Phase 2) that needs no new plugin module at all. See `phases.md`'s "Not planned" for the
 revised, narrower scope statement and the proposed next phase pending owner sign-off.
+
+**Superseded by what actually shipped, same day:** the toast-only substitute above was not what got built.
+Owner testing of the mockups (three host-slot stubs compared live) led to a full `TuiPlugin` module
+(`opencode/plugins/statusline.tui.tsx`) rendering into `sidebar_footer`, not a server-plugin toast — see
+the two "Live verification" sections above for the real bugs found building it, and `phases.md`'s Phase 4
+plus `decision-package-install.md` for the shipped design and the packaging that followed. This section is
+left as written for the historical record of the reasoning at the time; it is not the current plan.

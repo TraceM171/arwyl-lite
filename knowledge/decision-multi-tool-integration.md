@@ -80,9 +80,9 @@ is free to diverge in content, not just in path.
   `app_bottom`/`session_prompt_right`. Where Claude Code backs a rule with a mechanism
   (`decision-mechanism-over-prose.md`), OpenCode now carries an equivalent mechanism for both —
   `audit-2026-09-12-opencode-statusline-feasibility.md` has the full feature-by-feature breakdown of what
-  ported, what needed a different delivery mechanism (drill-down detail via `ui.dialog`/`route.register`
-  instead of OSC8 hyperlinks, not yet built), and what still has no OpenCode equivalent (rate-limit
-  countdowns, effort-level display).
+  ported, what needed a different delivery mechanism (drill-down detail via `ui.dialog` instead of OSC8
+  hyperlinks — shipped, per-repo diff dialogs with the knowledge activity list), and what still has no
+  OpenCode equivalent (rate-limit countdowns, effort-level display).
 
 ## Deliberation
 

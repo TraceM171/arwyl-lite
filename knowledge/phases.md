@@ -138,29 +138,17 @@ regardless of when it's needed. `cleanup-secret.sh`'s explicit step in the skill
 required, not weakened by this deferral — it just has no independent backstop yet, unlike the Claude Code
 version. Revisit if `session.idle`'s firing behavior gets confirmed for another reason.
 
-## Phase 4 (approved, IN PROGRESS) — sidebar_footer status display
+## Phase 4 (done, shipped 2026-09-12) — sidebar_footer status display
 
 Full feature-by-feature study and live-verification log:
 `audit-2026-09-12-opencode-statusline-feasibility.md`. The original blanket "Not planned" call below was
 too coarse — most segments have a real path; the design was then iterated live with the owner across
 three host-slot mockups before landing on the one being built.
 
-**Design decided by live comparison, not by reading the API docs:**
-
-- `app_bottom` (always-on, global) — rendered fine, but its slot props are `{}` (no `session_id` at
-  all, confirmed against the pinned `.d.ts`), so it read as generic chrome, not session state. Rejected.
-- `session_prompt_right` (session-scoped, inline beside the prompt) — genuinely session-scoped, but
-  visibly grew the prompt row height in practice. Rejected as too intrusive.
-- **`sidebar_footer` — chosen.** Session-scoped (receives `{session_id}`), lives in the existing sidebar
-  panel rather than competing for prompt-row space.
-- **Content is git + knowledge + nudges only** — no context%/model/effort/cost. OpenCode's native
-  sidebar already shows model/context/cost (confirmed via
-  [opencode#6026](https://github.com/anomalyco/opencode/issues/6026): a prior PR moved context
-  tokens/percentage/cost from the header into the sidebar) and **no config exists to hide or relocate
-  it** — checked against the pinned config schema, the current docs, and
-  [opencode#20145](https://github.com/anomalyco/opencode/issues/20145) (a community request to hide
-  exactly this redundancy, closed "not planned"). Duplicating unhideable native chrome would be pure
-  waste, so the build only adds what OpenCode doesn't already show.
+**Design decided by live comparison, not by reading the API docs** — `sidebar_footer` chosen over
+`app_bottom`/`session_prompt_right`, content scoped to git+knowledge+nudges only (OpenCode's native
+sidebar already shows model/context/cost with no way to hide it), drill-down via dialogs not OSC8. Full
+reasoning and rejected alternatives: `decision-opencode-statusline-design.md`.
 
 **Platform questions from the original study, resolved:**
 
@@ -200,6 +188,13 @@ before shipping — a deliberate choice of verification method.
 
 **Still not planned, unchanged:** rate-limit countdowns (confirmed absent from OpenCode entirely) and
 effort-level display (real concept, no confirmed session-readable surface).
+
+**Also shipped, same day: package install.** The manual symlink install above grew a second option —
+`opencode/` ships as a real local-path-installable package (`opencode/package.json`) that bootstraps
+`AGENTS.md`/skills/scripts onto disk on first load, gated on an existing `knowledge/` directory. Two real
+platform gotchas were caught and fixed live (a `package.json` `main`-field requirement the loader needs
+beyond `exports`, and a bootstrap-gate regression against Claude Code's own user-wide-but-per-project-opt-in
+behavior). Full reasoning, rejected alternatives, and both fixes: `decision-package-install.md`.
 
 ## Not planned (explicit scope choices, not unfinished work)
 

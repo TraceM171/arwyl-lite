@@ -144,6 +144,8 @@ behavioural evidence.
 
 ## Open
 
+- OpenCode Phases 1-4 all done/shipped — `phases.md` is now a candidate for retirement (`git mv` to a
+  dated record, its own "On completion" rule); fresh-eyes call, not done this session. `phases.md`.
 - Reinstall `arwyl-extras` (latest) on this machine and on the field-test consumer, then re-verify
   `secret-capture` from the actual cache path (the `0.2.1`–`0.3.1` changes were only verified against the
   working copy directly).
