@@ -22,6 +22,8 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-09-12** — package's `./tui` export confirmed live too (global install, no local config, real
+  session): sidebar rendered correctly. Both halves verified. `decision-package-install.md`.
 - **2026-09-12** — live-verified `opencode/` package's server half via a real `opencode run`; found+fixed
   a real bug (needs a plain `main` field, `exports` alone silently didn't resolve).
   `decision-package-install.md`.

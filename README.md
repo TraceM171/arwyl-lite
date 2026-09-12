@@ -88,11 +88,12 @@ the plugin never does it for you, global install or not — it would otherwise f
 next `opencode` launch in that project bootstraps `AGENTS.md`, the five skills, the two secret-capture
 scripts, and the `knowledge/.local` scaffold onto disk automatically — never overwriting anything
 that already exists — then runs the exact same `status-budget` check and `statusline` sidebar Option
-B installs by hand, with no per-file symlinking needed. The server half is live-confirmed (a real
-`opencode run` against a clean directory produced the full bootstrapped tree); the `./tui` half still
-needs an interactive test. See `knowledge/decision-package-install.md` for the full verification log,
-including a real gotcha it caught (the package needs a plain `main` field — `exports` alone silently
-did not resolve for a local-path plugin).
+B installs by hand, with no per-file symlinking needed. Both halves are live-confirmed: the server side
+via a headless `opencode run` against a clean directory (full bootstrapped tree, no errors) and the
+`./tui` side via a real interactive session with only the global install in play, no project-local
+config at all — the sidebar rendered correctly. See `knowledge/decision-package-install.md` for the
+full verification log, including a real gotcha it caught (the package needs a plain `main` field —
+`exports` alone silently did not resolve for a local-path plugin).
 
 ### Option B: manual
 

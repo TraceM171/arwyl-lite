@@ -81,14 +81,16 @@ either file exists for the package path.
   with — it exists purely to bridge OpenCode's package-loading convention to files (`AGENTS.md`, skills,
   scripts) that already exist for Option B's sake. If Option B is ever dropped, `server.js`'s bootstrap
   paths still point at the same on-disk files, so nothing about it becomes stale by that change.
-- OpenCode's local-path plugin resolution for the **server** half is now live-confirmed twice
-  (2026-09-12): once project-locally via `opencode.json`, once again purely from the **global**
+- OpenCode's local-path plugin resolution is now live-confirmed for **both** halves. Server: twice
+  (2026-09-12), once project-locally via `opencode.json`, once again purely from the **global**
   `~/.config/opencode/opencode.jsonc` + `~/.config/opencode/tui.json` (the owner's real machine, not a
   disposable test project) — with the caveat that it resolves via `package.json`'s `main` field, not
-  `exports` alone, a real gotcha this file's earlier draft didn't anticipate. The **TUI** half (`tui.json`
-  + `oc-plugin` routing to `./tui`) is still unverified — `opencode run` never exercises it. Revisit this
-  file the moment that's tested — confirm outright if it works, correct in place if it doesn't (starting
-  point: does `main` silently win there too, the same failure mode as the server case).
+  `exports` alone, a real gotcha this file's earlier draft didn't anticipate. TUI: confirmed live
+  2026-09-12 in an ordinary interactive session opened in arwyl-lite itself — `main` pointing at
+  `server.js` does **not** interfere with `tui.json` + `oc-plugin` routing to `./tui`, unlike the feared
+  failure mode; the `sidebar_footer` rendered correctly (real git status, real knowledge read/edit counts,
+  a live `curate?` nudge) with no local config anywhere in the project — global install alone, package
+  route, both entry points. Nothing left unverified in the loader mechanism itself.
 - **Correction, same day, caught by the owner testing the real global install**: the first shipped
   version of `bootstrap()` had no gate at all — it force-scaffolded `AGENTS.md`/skills/scripts into
   *every* directory `opencode` touched, global install or not. That's a real regression from Claude
