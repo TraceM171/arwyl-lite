@@ -66,9 +66,10 @@ is free to diverge in content, not just in path.
   version marker for a different reason (a human changelog, not cache invalidation) — settle which, if
   either, when Phase 1 actually ships rather than speculatively here. **Note this is about the ground
   rule (real adapted copies, not shared content) — it does not mean OpenCode lacks a real package-install
-  mechanism.** It has one for plugin code (npm/local-path, via `opencode.json`'s `plugin` field); it was
-  considered for `opencode/` as a whole and deferred by owner call, not ruled out — see `phases.md`'s
-  "Not planned" for the corrected finding and why manual install was kept anyway.
+  mechanism.** `opencode/` is now itself a real package (`opencode/package.json`), installable by local
+  path today and npm-publishable later with no structural change — why, and what it does on first load:
+  `decision-package-install.md`. This exists alongside the manual-symlink path (Option A/B), not
+  instead of it.
 - OpenCode's status-line-equivalent enforcement surface is now close to parity with Claude Code, not
   smaller. The character-budget `PostToolUse` check ported first (`opencode/plugins/status-budget.js`,
   `phases.md` phase 2, shipped 2026-09-11) — a from-scratch JS reimplementation of the Python hook's

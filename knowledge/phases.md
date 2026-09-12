@@ -220,24 +220,11 @@ effort-level display (real concept, no confirmed session-readable surface).
   (`decision-thorough-skill.md`). `standard` has no such dependency and could technically port on its own,
   but is not being split out and shipped separately right now — the whole skill is off the table for this
   port, not scheduled, revisit as its own decision if wanted later rather than assumed back in.
-- **A real package-manager install, deferred by owner call, not ruled out as impossible** (correcting an
-  earlier overstatement in this file — the first draft said OpenCode has "no equivalent to reproduce" for
-  Claude Code's plugin marketplace; that's wrong for the plugin-code half). What's actually confirmed:
-  `opencode.json`'s `plugin` field explicitly loads "npm packages **or local plugins**", and a dedicated
-  `opencode plugin <module>` CLI command installs one and updates the config — so `opencode/plugins/
-  status-budget.js` genuinely could ship as an installable unit, npm-published or referenced by local
-  path, not just manually symlinked. AI-setup's own harness (`../AI-setup/knowledge/plugin/
-  decision-package-shape.md`) is built package-shaped for exactly this reason, deferring only the actual
-  `npm publish` step for lack of an external consumer — not because the mechanism doesn't work.
-  **Skills have no equivalent** — discovery is filesystem-convention-only
-  (`.opencode/skills/<name>/SKILL.md`), with no confirmed way for an npm package to register one for
-  auto-discovery. A real option exists to close that gap anyway: a plugin's init code runs once per
-  project with full filesystem access (confirmed — that's how Phase 2 already works) and could copy its
-  own bundled skill files into place on first load, giving a single `opencode plugin install` command
-  the same effective reach as Claude Code's plugin manifest. **Not pursued now — the owner's explicit
-  call (2026-09-12) was to keep the current manual-symlink setup**, which mirrors Claude Code's own
-  accepted "Option B: Manual" path, not an inferior fallback. Revisit if the manual setup ever becomes a
-  real adoption barrier.
-  Regardless of which install story `opencode/` ever adopts: do **not** add an `opencode` entry to the
-  existing `.claude-plugin/marketplace.json` — it isn't a Claude Code plugin
+- ~~A real package-manager install, deferred by owner call~~ — **superseded 2026-09-12, now built**:
+  `opencode/` ships as a real package (local-path installable today, npm-publishable later), skills
+  included via a bootstrap-on-load pattern with a real published precedent. Full reasoning, what's
+  verified vs. not, and rejected alternatives: `decision-package-install.md`. README's "Setup — OpenCode"
+  now documents it as Option A, manual symlinking kept as Option B.
+  Regardless of which install story `opencode/` uses: do **not** add an `opencode` entry to the existing
+  `.claude-plugin/marketplace.json` — it isn't a Claude Code plugin
   (`incident-2026-08-31-arwyl-extras-invalid-agents-key.md` is what manifest-guessing costs).

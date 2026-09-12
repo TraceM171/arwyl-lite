@@ -19,6 +19,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `decision-secret-capture-scope.md` | why `secret-capture` has no guard hook and no MCP-tool interface (yet) |
 | `decision-thorough-skill.md` | leveled `thorough` skill in `arwyl-extras` (any domain, not investigation-only) — why leveled/opt-in, not a blanket mechanism |
 | `decision-multi-tool-integration.md` | why each tool gets real adapted copies, not a shared abstraction — for `opencode/` and beyond |
+| `decision-package-install.md` | `opencode/` as a real installable package (bootstrap-on-load), alongside manual symlink install |
 | `audit-2026-07-17-retrievability-burial-test.md` | the burial test: design, results, why it didn't reproduce |
 | `audit-2026-07-29-field-study-curate.md` | field study of a consumer's first curate pass: 6 findings, what worked |
 | `audit-2026-08-29-field-study-thescriv.md` | field study of a second consumer (mobile app): 1 confirmed gap (plan-slot / plan-completion), rule fixes in `0.1.25`, and what's working confirmed at N=2 |

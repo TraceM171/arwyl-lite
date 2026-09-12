@@ -22,6 +22,8 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-09-12** — `opencode/` ships as a real package (local-path/npm), bootstrap-on-load pattern with a
+  real published precedent; manual symlink kept as Option B. `decision-package-install.md`.
 - **2026-09-12** — OpenCode statusline: drill-down dialogs shipped (knowledge read/edit lists w/ dirty
   marker, per-repo collapsed diff view). Session diff stays non-interactive by design. `phases.md`.
 - **2026-09-12** — OpenCode Phase 4 shipped: `opencode/plugins/statusline.tui.tsx` (`sidebar_footer`:

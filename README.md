@@ -59,7 +59,35 @@ Currently ships the `handoff`, `secret-capture`, and `thorough` skills (below), 
 
 ## Setup — OpenCode
 
-OpenCode has no plugin/marketplace system — it reads plain files from `.opencode/` (project) or `~/.config/opencode/` (global). Setup is always the "manual" shape:
+OpenCode has no plugin marketplace like Claude Code's, but `opencode/` is itself a real installable
+package (npm-publishable or referenced by local path) as well as a set of plain files — two install
+options, same as Claude Code's Option A/B split.
+
+### Option A: package install (recommended)
+
+Point both of OpenCode's plugin config files at the `opencode/` directory (as a local path, or the
+published package name once this is on npm):
+
+```json
+// opencode.json (project root)
+{ "plugin": ["/path/to/agents-template/opencode"] }
+```
+
+```json
+// tui.json (project root)
+{ "$schema": "https://opencode.ai/tui.json", "plugin": ["/path/to/agents-template/opencode"] }
+```
+
+One package, referenced from both files — `opencode.json` resolves its default export (the server
+plugin), `tui.json` resolves `./tui` via the package's own `oc-plugin` field. On the next `opencode`
+launch in that project, the plugin bootstraps `AGENTS.md`, the five skills, the two secret-capture
+scripts, and the `knowledge/.local` scaffold onto disk automatically — never overwriting anything
+that already exists — then runs the exact same `status-budget` check and `statusline` sidebar Option
+B installs by hand, with no per-file symlinking needed. See `knowledge/decision-package-install.md`
+for why, and what's still unverified (OpenCode's own local-path plugin resolution hasn't been
+exercised live yet — the bootstrap logic itself has, in isolation).
+
+### Option B: manual
 
 ```bash
 # 1. Clone this template
