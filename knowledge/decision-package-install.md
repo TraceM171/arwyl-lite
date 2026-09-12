@@ -4,11 +4,12 @@
 **Decision:** `opencode/` ships as a real package (`opencode/package.json`, local-path installable today,
 npm-publishable later with no structural change) alongside the existing manual-symlink path — Option A and
 Option B, the same split Claude Code already has. `opencode/plugins/server.js` is the package's server
-export: on first load in a project it bootstraps `AGENTS.md`, the five skills, the two secret-capture
-scripts, and the `knowledge/.local` scaffold onto disk (skipping anything that already exists), then
-delegates to `status-budget.js`'s existing hook, imported not duplicated. `opencode/plugins/
-statusline.tui.tsx` is the package's `./tui` export, reused as-is — no second copy of either file exists
-for the package path.
+export: on first load in a project **that already has a `knowledge/` directory**, it bootstraps
+`AGENTS.md`, the five skills, the two secret-capture scripts, and the `knowledge/.local` scaffold onto disk
+(skipping anything that already exists), then delegates to `status-budget.js`'s existing hook, imported not
+duplicated. Without an existing `knowledge/` directory the plugin is completely inert — it touches nothing.
+`opencode/plugins/statusline.tui.tsx` is the package's `./tui` export, reused as-is — no second copy of
+either file exists for the package path.
 
 ## Why (current reasoning)
 
@@ -88,13 +89,16 @@ for the package path.
   + `oc-plugin` routing to `./tui`) is still unverified — `opencode run` never exercises it. Revisit this
   file the moment that's tested — confirm outright if it works, correct in place if it doesn't (starting
   point: does `main` silently win there too, the same failure mode as the server case).
-- **Global install means every project, automatically, not opt-in per project.** Same semantics this
-  project's manual-install docs already state for a global install (symlink into `~/.config/opencode/...`
-  instead of `.opencode/...`) — not a new risk the package introduces, but the package makes it more
-  consequential because it now *writes files* rather than requiring a manual symlink per project: the
-  owner's global install (confirmed live, same day) will bootstrap `AGENTS.md`/`.opencode/skills`/
-  `knowledge/.local` into **any** directory `opencode` is run from that doesn't already have an
-  `AGENTS.md`, not just intentionally-adopted projects.
+- **Correction, same day, caught by the owner testing the real global install**: the first shipped
+  version of `bootstrap()` had no gate at all — it force-scaffolded `AGENTS.md`/skills/scripts into
+  *every* directory `opencode` touched, global install or not. That's a real regression from Claude
+  Code's own behavior: the Claude Code plugin is installable user-wide too, but only ever *acts* in a
+  project that already has a `knowledge/` directory — the user's own deliberate per-project opt-in
+  signal, not something the plugin creates on its own initiative. Fixed by gating the entire bootstrap
+  on `existsSync(join(directory, "knowledge"))`; live-tested both branches (no `knowledge/` → completely
+  inert, zero files touched; existing `knowledge/` → full scaffold fills in as before). Creating the
+  *first* `knowledge/` folder in a brand-new project remains a deliberate manual step (`mkdir knowledge`)
+  under both install options — this was never something either path automated, and still isn't.
 
 ## Deliberation
 

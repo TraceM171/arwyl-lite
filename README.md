@@ -79,8 +79,13 @@ published package name once this is on npm):
 ```
 
 One package, referenced from both files — `opencode.json` resolves its default export (the server
-plugin), `tui.json` resolves `./tui` via the package's own `oc-plugin` field. On the next `opencode`
-launch in that project, the plugin bootstraps `AGENTS.md`, the five skills, the two secret-capture
+plugin), `tui.json` resolves `./tui` via the package's own `oc-plugin` field. This is meant to be
+installed **once, globally** (`~/.config/opencode/...`), same as Claude Code's own plugin — and, same
+as Claude Code, it only does anything in a project that already has a `knowledge/` directory. Creating
+that folder (`mkdir knowledge`) is still the deliberate first step of adopting this in a new project;
+the plugin never does it for you, global install or not — it would otherwise force-scaffold
+`AGENTS.md`/skills into every unrelated repo `opencode` happens to open. Once `knowledge/` exists, the
+next `opencode` launch in that project bootstraps `AGENTS.md`, the five skills, the two secret-capture
 scripts, and the `knowledge/.local` scaffold onto disk automatically — never overwriting anything
 that already exists — then runs the exact same `status-budget` check and `statusline` sidebar Option
 B installs by hand, with no per-file symlinking needed. The server half is live-confirmed (a real
