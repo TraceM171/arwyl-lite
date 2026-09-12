@@ -80,12 +80,21 @@ for the package path.
   with — it exists purely to bridge OpenCode's package-loading convention to files (`AGENTS.md`, skills,
   scripts) that already exist for Option B's sake. If Option B is ever dropped, `server.js`'s bootstrap
   paths still point at the same on-disk files, so nothing about it becomes stale by that change.
-- OpenCode's local-path plugin resolution for the **server** half is now live-confirmed (2026-09-12,
-  `opencode run` against a clean scratch directory) — with the caveat that it resolves via `package.json`'s
-  `main` field, not `exports` alone, a real gotcha this file's earlier draft didn't anticipate. The **TUI**
-  half (`tui.json` + `oc-plugin` routing to `./tui`) is still unverified — `opencode run` never exercises
-  it. Revisit this file the moment that's tested — confirm outright if it works, correct in place if it
-  doesn't (starting point: does `main` silently win there too, the same failure mode as the server case).
+- OpenCode's local-path plugin resolution for the **server** half is now live-confirmed twice
+  (2026-09-12): once project-locally via `opencode.json`, once again purely from the **global**
+  `~/.config/opencode/opencode.jsonc` + `~/.config/opencode/tui.json` (the owner's real machine, not a
+  disposable test project) — with the caveat that it resolves via `package.json`'s `main` field, not
+  `exports` alone, a real gotcha this file's earlier draft didn't anticipate. The **TUI** half (`tui.json`
+  + `oc-plugin` routing to `./tui`) is still unverified — `opencode run` never exercises it. Revisit this
+  file the moment that's tested — confirm outright if it works, correct in place if it doesn't (starting
+  point: does `main` silently win there too, the same failure mode as the server case).
+- **Global install means every project, automatically, not opt-in per project.** Same semantics this
+  project's manual-install docs already state for a global install (symlink into `~/.config/opencode/...`
+  instead of `.opencode/...`) — not a new risk the package introduces, but the package makes it more
+  consequential because it now *writes files* rather than requiring a manual symlink per project: the
+  owner's global install (confirmed live, same day) will bootstrap `AGENTS.md`/`.opencode/skills`/
+  `knowledge/.local` into **any** directory `opencode` is run from that doesn't already have an
+  `AGENTS.md`, not just intentionally-adopted projects.
 
 ## Deliberation
 
