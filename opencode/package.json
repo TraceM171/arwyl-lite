@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Arwyl Lite's OpenCode integration — knowledge-tree conventions (AGENTS.md, skills), a status-budget check, and a statusline sidebar — as one installable plugin. See knowledge/decision-package-install.md.",
+  "main": "./plugins/server.js",
   "exports": {
     ".": {
       "types": "./plugins/server.js",

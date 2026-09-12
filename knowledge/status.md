@@ -22,6 +22,9 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-09-12** — live-verified `opencode/` package's server half via a real `opencode run`; found+fixed
+  a real bug (needs a plain `main` field, `exports` alone silently didn't resolve).
+  `decision-package-install.md`.
 - **2026-09-12** — `opencode/` ships as a real package (local-path/npm), bootstrap-on-load pattern with a
   real published precedent; manual symlink kept as Option B. `decision-package-install.md`.
 - **2026-09-12** — OpenCode statusline: drill-down dialogs shipped (knowledge read/edit lists w/ dirty

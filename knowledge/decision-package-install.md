@@ -32,13 +32,26 @@ for the package path.
   field — a convention read directly from a real working example (`AI-setup/harness`'s own TUI plugin
   package), not guessed. Both config files point at the *same* package path/name, so a consumer only has
   one location to reference regardless of which plugin kind is being loaded.
-- **Bootstrap logic is real and independently verified**, in isolation: a plain `node`/`bun` script
-  importing `bootstrap()` directly and running it against a scratch directory correctly created
+- **Bootstrap logic is real and independently verified**, in isolation and then live: a plain `node`/`bun`
+  script importing `bootstrap()` directly and running it against a scratch directory correctly created
   `AGENTS.md`, all five skill directories, both scripts, and the `knowledge/.local` scaffold — and, run a
-  second time against a directory with a pre-existing `AGENTS.md`, left that file untouched. What is *not*
-  independently verified: whether OpenCode's own loader actually resolves a local-path `plugin` string to
-  this package the way the reference material describes — that needs a real `opencode` launch, the same
-  category of gap every other stage of this build has had until the owner tested it live.
+  second time against a directory with a pre-existing `AGENTS.md`, left that file untouched. Then
+  confirmed live end-to-end 2026-09-12: a real `opencode run` (headless, free model
+  `opencode/nemotron-3.5-lightning-free`, no cost) against a clean scratch directory referencing the
+  package via `opencode.json`'s `plugin` field produced the exact same file tree — the server export
+  genuinely loads and its bootstrap genuinely runs through OpenCode's own loader, not just in isolation.
+  **A real bug was caught doing this**, not just confirmed clean: the package's `package.json` originally
+  declared only the modern conditional `exports` map (`{".": {"types":…, "import":…}}`) with no `main`
+  field — OpenCode's local-path plugin loader does not resolve that for the root entry point and silently
+  loaded nothing (no error anywhere, even at `--log-level DEBUG`; `opencode debug config` showed the
+  plugin correctly recognized and resolved to a `file://` URL, but the module itself was never imported).
+  Isolated with a minimal throwaway test plugin (loaded fine with a plain `main` + simple string
+  `exports`), then fixed by adding `"main": "./plugins/server.js"` to the real package — confirmed working
+  immediately after. **Still unverified**: the `./tui` export specifically. `opencode run` is headless and
+  never touches `tui.json` or TUI-context plugin loading at all, so whether `oc-plugin` +
+  `exports["./tui"]` still resolves correctly now that a `main` field exists (or whether `main` wrongly
+  takes priority there too, given it silently won for the server case) is unconfirmed — needs a real
+  interactive `opencode` launch.
 
 ## Rejected
 
@@ -67,11 +80,12 @@ for the package path.
   with — it exists purely to bridge OpenCode's package-loading convention to files (`AGENTS.md`, skills,
   scripts) that already exist for Option B's sake. If Option B is ever dropped, `server.js`'s bootstrap
   paths still point at the same on-disk files, so nothing about it becomes stale by that change.
-- OpenCode's local-path plugin resolution behavior (does `opencode.json`'s `plugin: ["/abs/path"]`
-  actually load `package.json`'s `exports["."]`, does `tui.json` + `oc-plugin` really route to `./tui`)
-  is asserted from a working example in a sibling project, not independently re-verified here yet. Revisit
-  this file the moment it's tested live — confirm outright if it works as expected, correct in place if it
-  doesn't.
+- OpenCode's local-path plugin resolution for the **server** half is now live-confirmed (2026-09-12,
+  `opencode run` against a clean scratch directory) — with the caveat that it resolves via `package.json`'s
+  `main` field, not `exports` alone, a real gotcha this file's earlier draft didn't anticipate. The **TUI**
+  half (`tui.json` + `oc-plugin` routing to `./tui`) is still unverified — `opencode run` never exercises
+  it. Revisit this file the moment that's tested — confirm outright if it works, correct in place if it
+  doesn't (starting point: does `main` silently win there too, the same failure mode as the server case).
 
 ## Deliberation
 
