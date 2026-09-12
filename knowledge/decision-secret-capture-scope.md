@@ -2,8 +2,9 @@
 
 **Status:** ACTIVE since 2026-07-31
 **Decision:** Ship `secret-capture` (`arwyl-extras/skills/secret-capture/`) as a skill + Bash script,
-capture and cleanup only — no exposure-warning guard hook, no MCP-tool interface. Both omissions are
-deliberate scope limits, not unfinished work, each revisited only under a stated trigger.
+capture and cleanup only — no exposure-warning guard hook, no MCP-tool interface, and in the OpenCode port
+no `sweep-secrets` backstop. Each omission is a deliberate scope limit, not unfinished work, revisited only
+under a stated trigger.
 
 ## Skill + script, not an MCP tool
 
@@ -39,6 +40,18 @@ because the guard is a bad idea, but because it's a separate mechanism with its 
 doesn't need to ship in the same pass as capture itself. Revisit only with a concrete plan for the three
 risks above, not as a default follow-up.
 
+## OpenCode port: no `sweep-secrets` backstop (yet)
+
+The OpenCode copy (`opencode/skills/secret-capture/`, with byte-identical `capture-secret.sh` /
+`cleanup-secret.sh` in `opencode/scripts/`) ships without the `Stop`-hook `sweep-secrets.sh` backstop the
+Claude Code plugin has (`stack.md`'s "Enforcement mechanisms"). `session.idle` exists in OpenCode's `Event`
+union and a generic `event` hook exists to observe it, but whether a server plugin's `event` hook reliably
+fires on `session.idle` in practice is unconfirmed — and project-local plugins load lazily (only after the
+first directory-scoped request), an added wrinkle for a backstop meant to catch cleanup regardless of when
+it's needed. The skill's explicit `cleanup-secret.sh` step is unchanged and already required, not weakened
+by this — the OpenCode `SKILL.md` notes that cleanup is *more* load-bearing there for exactly this reason.
+**Revisit** if `session.idle`'s firing behaviour gets confirmed for another reason.
+
 ## Consequences accepted
 
 - The `secret-capture` skill's own text still has to instruct "reference by path only, never `cat` it" as
@@ -57,3 +70,7 @@ risks above, not as a default follow-up.
 - `incident-2026-07-31-capture-secret-cleanup-bug.md` — a real bug found while building this skill (a
   `set -e` pitfall that silently skipped cleanup on failure paths), unrelated to the scope choices above
   but discovered in the same session.
+- `incident-2026-07-31-secret-capture-auto-mode-block.md` — a real-use denial under Claude Code's auto-mode
+  classifier, checked against the MCP-tool revisit trigger above and not reopened: a mode-dependent
+  constraint, not the invocation misfire that trigger was written for.
+- `deploy-2026-09-12-opencode-support.md`, Phase 3 — the OpenCode port and the backstop deferral.

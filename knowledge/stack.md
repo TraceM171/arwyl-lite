@@ -11,13 +11,16 @@ Chosen approach for distributing and versioning Arwyl Lite, and how the moving p
 ## Distribution
 
 - **Channel**: GitHub marketplace `TraceM171/arwyl-lite`, plugin name `arwyl-lite`, marketplace name `arwyl-lite-marketplace`. Previously named `agents-knowledge` (renamed `cda2226`).
-- **Multi-tool intent, not multi-tool sharing**: `claude_code/` today, `opencode/` in progress — why real per-tool copies rather than one shared abstraction: `decision-multi-tool-integration.md`. Plan: `phases.md`.
+- **Multi-tool intent, not multi-tool sharing**: `claude_code/` and `opencode/` — why real per-tool copies rather than one shared abstraction: `decision-multi-tool-integration.md`.
+- **OpenCode**: `opencode/` is an installable package (`opencode/package.json` — local path today; the server export bootstraps `AGENTS.md`/skills/scripts into a project that already has `knowledge/`, the `./tui` export is the statusline), or symlinked in manually — `decision-package-install.md`. Its `version` is bumped per ship like `plugin.json`'s (`decision-versioning.md`). It is not a Claude Code plugin and has no `marketplace.json` entry.
 
 ## This repo runs its own plugin
 
 Arwyl Lite is installed in its own repo at project scope (`.claude/settings.json`) and dogfoods its own conventions — this `knowledge/` tree is the result, not the product (`_basic.md`).
 
 The parts that can be wired to the **working copy** rather than the plugin cache are: the status line points at this checkout's `claude_code/statusline.py`, and `.claude/settings.json` points the status-budget hook at `claude_code/hooks/status-budget.sh` (see "Enforcement mechanisms"). Both exist so edits are visible immediately, without a version bump or reinstall cycle, while actively developing. Everything loaded *as a plugin* — the skills, the `SessionStart` hook — still comes from the version-pinned cache, so skill-text changes need the normal bump-and-reinstall round trip to be exercised here (`decision-versioning.md`).
+
+**OpenCode, same repo.** This repo has a `knowledge/` directory but no root `AGENTS.md`/`.opencode/` — it was never set up as a *consumer* of its own plugin. With the OpenCode package installed globally, any `opencode` run here passes the bootstrap gate (`decision-package-install.md`) and writes `AGENTS.md` + `.opencode/skills` + `.opencode/scripts` into the repo root — byte-identical to `opencode/AGENTS.md` / `opencode/skills/*`, not divergent content. Untracked and harmless, but it reappears every time `opencode` touches this repo while a global install is active; `rm -rf .opencode AGENTS.md` at the repo root clears it.
 
 ## Version-bump-for-cache
 
@@ -29,9 +32,7 @@ Claude Code caches an installed plugin keyed by `plugin.json`'s `version` string
 
 ## AGENTS.md is inlined; knowledge files are not
 
-`claude_code/AGENTS.md` is pasted verbatim into the `SessionStart` hook's context (Claude Code hard-caps hook `additionalContext` at 10,000 characters — silent truncation past that, no error). A pre-commit hook (`.githooks`, opt in via `git config core.hooksPath .githooks`) blocks any commit that pushes it over an **8,800-character** budget. The constant lives in two places that must stay in sync: `.githooks/pre-commit` and `hooks/session-start.py`.
-
-Raised 8,000 → 8,500 in `0.1.14` (the sixth kind's reminder line had to fit), then 8,500 → 8,800 in `0.1.15` (the "Place for retrieval" read/write pointers had to fit — see `decision-retrievability.md`). The payload's only other content is the ~150-char read-instruction line, so the worst case is ~8,950 against the 10,000 cap. Measured live after the `0.1.15` raise: 8,567 payload, ~1,433 margin. Each raise is deliberate: keep new inlined content to minimal pointers, full text in `KNOWLEDGE_ORG.md`, so the budget rises rarely.
+`claude_code/AGENTS.md` is pasted verbatim into the `SessionStart` hook's context (Claude Code hard-caps hook `additionalContext` at 10,000 characters — silent truncation past that, no error). A pre-commit hook (`.githooks`, opt in via `git config core.hooksPath .githooks`) blocks any commit that pushes it over a **9,000-character** budget, and `hooks/session-start.py` warns in-session past the same number. The constant lives in both places and they must stay in sync. With the ~150-char read-instruction line the hook appends, the worst case is ~9,150 against the 10,000 cap. The budget is fixed — new permanent rules get their full text in `KNOWLEDGE_ORG.md` and at most a short pointer in `AGENTS.md`: `decision-agents-md-budget.md`.
 
 `_basic.md` / `status.md` files are deliberately *not* inlined the same way — a growing `status.md` would blow the cap unnoticed — so the hook points the agent at them and lets it `Read` them instead (`09556ec`).
 
@@ -47,7 +48,7 @@ Reading the cache path directly is also wrong even when it resolves: it is versi
 
 `reflect` and `curate` are pitched at different runtimes. `reflect` runs often and on a Sonnet-class model (currently Sonnet 5, the common day-to-day model) — confirmed across many field runs — so its steps are concrete and checklist-shaped, safe to follow literally.
 
-**`curate`'s runtime varies by consumer, and both classes have now been seen.** The design intent was an Opus-class model, so its guidance leans on judgment for the ambiguous classification calls. Field observations: the field-test consumer's first (and only) curate pass, 2026-07-29, ran on **Sonnet 5** and no curate/reflect commit in that consumer's history is Opus-authored; a **second consumer** ran two curate passes (2026-08-21, 2026-08-29) on **Opus 5**, both in fresh sessions, both genuinely restructuring — splitting a 577-line mega-file, relocating a mis-kinded reserved-name file — rather than patching within domains (`audit-2026-08-29-field-study-thescriv.md`). So Opus is achievable and consumers do pick it, but it is not guaranteed. `curate.md`'s step-0 self-check and its Sonnet-survivable guidance both stay: treat judgment-heavy prose there as a bet that pays off on Opus, and keep it working on Sonnet.
+**`curate`'s runtime varies by consumer, and both classes have now been seen.** The design intent was an Opus-class model, so its guidance leans on judgment for the ambiguous classification calls. Real consumers have run it on both Sonnet 5 and Opus 5, the Opus passes in fresh sessions and genuinely restructuring (`audit-2026-07-29-field-study-curate.md`, `audit-2026-08-29-field-study-thescriv.md`). So Opus is achievable and consumers do pick it, but it is not guaranteed. `curate.md`'s step-0 self-check and its Sonnet-survivable guidance both stay: treat judgment-heavy prose there as a bet that pays off on Opus, and keep it working on Sonnet.
 
 The skill can no longer be *told* to pick a better model — it cannot; the model is fixed before the skill text loads. `curate.md`'s step-0 self-check instead has it name its model and offer the user a deferral, which is an instruction the reader can actually act on. See `audit-2026-07-29-field-study-curate.md`.
 
@@ -72,6 +73,9 @@ Some rules are enforced by machinery rather than prose — the choice, and when 
   reason as the status line, so edits are testable without a version bump. `status-budget.sh` resolves
   its python script relative to `$0` rather than `$CLAUDE_PLUGIN_ROOT` precisely so both invocation
   paths work; consumers get it via the plugin with no settings change.
+- **`opencode/plugins/status-budget.js`** — the OpenCode port of the same check: `tool.execute.after` on
+  `write`/`edit`, the same algorithm and `ARWYL_STATUS_ENTRY_BUDGET` override, reimplemented in JS rather
+  than shelling out to the Python script (`decision-multi-tool-integration.md`).
 - **`.githooks/pre-commit`** — the `AGENTS.md` character budget (dev-side, this repo only; not
   shipped payload — a plugin cannot install a git hook).
 - **`arwyl-extras/hooks/sweep-secrets.sh`** — `Stop` hook, shipped in `arwyl-extras` not `arwyl-lite`
@@ -79,6 +83,7 @@ Some rules are enforced by machinery rather than prose — the choice, and when 
   `secret-capture` skill's scratch dirs after 10 minutes — a backstop for the skill's own instructed
   cleanup step, same "a step that depends on being remembered is not a control" reasoning as the
   status-budget hook above. Silent: no `hookSpecificOutput`, it only ever deletes stale local files.
+  No OpenCode counterpart yet (`decision-secret-capture-scope.md`).
 
 Budgets are stated in **characters, not lines** — a line count is not checkable under hard wrapping.
 

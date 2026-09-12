@@ -43,7 +43,8 @@ delivered via `api.ui.dialog`, not OSC8 terminal hyperlinks.
 - **Showing model/context/cost/effort/rate-limits in the new element** — OpenCode already shows
   model/context/cost natively with no way to hide it (see above); rate-limit countdowns have no platform
   surface; effort-level has no confirmed session-readable surface. Building any of these would either
-  duplicate unhideable chrome or ship speculative plumbing with nothing real to read from.
+  duplicate unhideable chrome or ship speculative plumbing with nothing real to read from. Revisit the
+  last two only if OpenCode ever exposes a rate-limit API or a session-readable effort field.
 - **A session-scoped diff dialog** (mirroring the repo-diff dialogs) — `session.diff()` only returns
   counts, and there is no clean way to attribute "what the agent touched this session" as a real patch the
   way a repo's own `git diff` can. The session line stays plain text, non-interactive.
@@ -70,6 +71,6 @@ delivered via `api.ui.dialog`, not OSC8 terminal hyperlinks.
 ## Deliberation
 
 - Session 2026-09-12 (this repo) — `audit-2026-09-12-opencode-statusline-feasibility.md` (the original
-  feature-by-feature study and the two "Live verification" logs), `phases.md`'s Phase 4 (the shipped
-  narrative). Packaging/distribution of the resulting plugin is a separate decision:
+  feature-by-feature study and the two "Live verification" logs), `deploy-2026-09-12-opencode-support.md`'s
+  Phase 4 (the shipped narrative). Packaging/distribution of the resulting plugin is a separate decision:
   `decision-package-install.md`.

@@ -13,15 +13,16 @@ either file exists for the package path.
 
 ## Why (current reasoning)
 
-- `phases.md`'s "Not planned" section already established the technical fact months before this file
-  existed: `opencode.json`'s `plugin` field genuinely loads npm or local-path packages, and a plugin's
-  init code runs once per project with full filesystem access — the same access `status-budget.js` already
-  uses via its `tool.execute.after` hook. What changed is the *reason to spend the effort*: at the time of
-  that finding, `opencode/` was a handful of skill files and one hook; after Phase 4, it's also a TUI
-  plugin needing its own `tui.json` wiring merged into whatever a consumer's project already has. Manual
-  install went from "symlink a few files" to "symlink files, hand-edit a second JSON config, know which of
-  two loader conventions applies to which file type" — exactly the kind of growing friction that justifies
-  reopening a deferred call rather than treating the original deferral as permanent.
+- The technical fact was established before this file existed (the OpenCode support plan's "Not planned"
+  section, now `deploy-2026-09-12-opencode-support.md`): `opencode.json`'s `plugin` field genuinely loads
+  npm or local-path packages, and a plugin's init code runs once per project with full filesystem access —
+  the same access `status-budget.js` already uses via its `tool.execute.after` hook. What changed is the
+  *reason to spend the effort*: at the time of that finding, `opencode/` was a handful of skill files and
+  one hook; after Phase 4, it's also a TUI plugin needing its own `tui.json` wiring merged into whatever a
+  consumer's project already has. Manual install went from "symlink a few files" to "symlink files,
+  hand-edit a second JSON config, know which of two loader conventions applies to which file type" —
+  exactly the kind of growing friction that justifies reopening a deferred call rather than treating the
+  original deferral as permanent.
 - **A real, published precedent exists for exactly this pattern**, found live 2026-09-12:
   [`opencode-skills-collection`](https://github.com/FrancoStino/opencode-skills-collection) is a shipped
   community plugin whose init code copies skill files bundled inside its own npm package onto disk when
@@ -33,26 +34,11 @@ either file exists for the package path.
   field — a convention read directly from a real working example (`AI-setup/harness`'s own TUI plugin
   package), not guessed. Both config files point at the *same* package path/name, so a consumer only has
   one location to reference regardless of which plugin kind is being loaded.
-- **Bootstrap logic is real and independently verified**, in isolation and then live: a plain `node`/`bun`
-  script importing `bootstrap()` directly and running it against a scratch directory correctly created
-  `AGENTS.md`, all five skill directories, both scripts, and the `knowledge/.local` scaffold — and, run a
-  second time against a directory with a pre-existing `AGENTS.md`, left that file untouched. Then
-  confirmed live end-to-end 2026-09-12: a real `opencode run` (headless, free model
-  `opencode/nemotron-3.5-lightning-free`, no cost) against a clean scratch directory referencing the
-  package via `opencode.json`'s `plugin` field produced the exact same file tree — the server export
-  genuinely loads and its bootstrap genuinely runs through OpenCode's own loader, not just in isolation.
-  **A real bug was caught doing this**, not just confirmed clean: the package's `package.json` originally
-  declared only the modern conditional `exports` map (`{".": {"types":…, "import":…}}`) with no `main`
-  field — OpenCode's local-path plugin loader does not resolve that for the root entry point and silently
-  loaded nothing (no error anywhere, even at `--log-level DEBUG`; `opencode debug config` showed the
-  plugin correctly recognized and resolved to a `file://` URL, but the module itself was never imported).
-  Isolated with a minimal throwaway test plugin (loaded fine with a plain `main` + simple string
-  `exports`), then fixed by adding `"main": "./plugins/server.js"` to the real package — confirmed working
-  immediately after. **Still unverified**: the `./tui` export specifically. `opencode run` is headless and
-  never touches `tui.json` or TUI-context plugin loading at all, so whether `oc-plugin` +
-  `exports["./tui"]` still resolves correctly now that a `main` field exists (or whether `main` wrongly
-  takes priority there too, given it silently won for the server case) is unconfirmed — needs a real
-  interactive `opencode` launch.
+- **Verified live through OpenCode's own loader, both halves** — not just in isolation. Resolution goes
+  through `package.json`'s `main` field (the `exports` map alone silently loads nothing for the root entry
+  point), and `main` does not interfere with `tui.json` + `oc-plugin` routing to `./tui`. The sequence, and
+  the two real bugs it caught (the missing `main` field; a bootstrap with no `knowledge/` gate):
+  `audit-2026-09-12-opencode-package-install-verification.md`.
 
 ## Rejected
 
@@ -64,13 +50,15 @@ either file exists for the package path.
 - **Publishing to the real npm registry now** — not rejected outright, just not done yet: there's no
   npm account/scope set up for this project, and a local-path reference exercises the identical package
   shape (`exports`, `oc-plugin`, bootstrap-on-load) that an eventual `npm publish` would need anyway. The
-  package is *structured* to be publishable later with no rework, per `stack.md`'s existing
-  package-shaped-for-a-reason precedent in the sibling `AI-setup` project.
+  package is *structured* to be publishable later with no rework.
 - **A single shared `bootstrap.js` imported by both a hypothetical Claude Code equivalent and this OpenCode
   package** — not considered a live option: `decision-multi-tool-integration.md`'s ground rule (real
   adapted copies per tool, not shared abstraction) already settled this; Claude Code has no equivalent
   bootstrap step to share in the first place, since its own `SessionStart` hook plus the plugin marketplace
   cover the same job differently.
+- **An `opencode` entry in `.claude-plugin/marketplace.json`** — whatever install story `opencode/` uses, it
+  isn't a Claude Code plugin (`incident-2026-08-31-arwyl-extras-invalid-agents-key.md` is what
+  manifest-guessing costs).
 
 ## Consequences accepted
 
@@ -81,30 +69,16 @@ either file exists for the package path.
   with — it exists purely to bridge OpenCode's package-loading convention to files (`AGENTS.md`, skills,
   scripts) that already exist for Option B's sake. If Option B is ever dropped, `server.js`'s bootstrap
   paths still point at the same on-disk files, so nothing about it becomes stale by that change.
-- OpenCode's local-path plugin resolution is now live-confirmed for **both** halves. Server: twice
-  (2026-09-12), once project-locally via `opencode.json`, once again purely from the **global**
-  `~/.config/opencode/opencode.jsonc` + `~/.config/opencode/tui.json` (the owner's real machine, not a
-  disposable test project) — with the caveat that it resolves via `package.json`'s `main` field, not
-  `exports` alone, a real gotcha this file's earlier draft didn't anticipate. TUI: confirmed live
-  2026-09-12 in an ordinary interactive session opened in arwyl-lite itself — `main` pointing at
-  `server.js` does **not** interfere with `tui.json` + `oc-plugin` routing to `./tui`, unlike the feared
-  failure mode; the `sidebar_footer` rendered correctly (real git status, real knowledge read/edit counts,
-  a live `curate?` nudge) with no local config anywhere in the project — global install alone, package
-  route, both entry points. Nothing left unverified in the loader mechanism itself.
-- **Correction, same day, caught by the owner testing the real global install**: the first shipped
-  version of `bootstrap()` had no gate at all — it force-scaffolded `AGENTS.md`/skills/scripts into
-  *every* directory `opencode` touched, global install or not. That's a real regression from Claude
-  Code's own behavior: the Claude Code plugin is installable user-wide too, but only ever *acts* in a
-  project that already has a `knowledge/` directory — the user's own deliberate per-project opt-in
-  signal, not something the plugin creates on its own initiative. Fixed by gating the entire bootstrap
-  on `existsSync(join(directory, "knowledge"))`; live-tested both branches (no `knowledge/` → completely
-  inert, zero files touched; existing `knowledge/` → full scaffold fills in as before). Creating the
-  *first* `knowledge/` folder in a brand-new project remains a deliberate manual step (`mkdir knowledge`)
-  under both install options — this was never something either path automated, and still isn't.
+- **The bootstrap only acts where a `knowledge/` directory already exists** — the same user-wide-install,
+  per-project-opt-in behaviour as the Claude Code plugin. Creating the *first* `knowledge/` folder in a
+  brand-new project remains a deliberate manual step (`mkdir knowledge`) under both install options. A side
+  effect in this repo, which has a `knowledge/` tree of its own: `stack.md`'s "This repo runs its own
+  plugin".
 
 ## Deliberation
 
 - Session 2026-09-12 (this repo) — same session that shipped Phase 4's `sidebar_footer` statusline and its
   drill-down dialogs; the publishing-method question was raised by the owner once the TUI plugin's install
   surface grew, researched against OpenCode's official docs plus real published community plugins, and
-  decided the same session. `phases.md` Phase 4's closing notes link back here.
+  decided the same session. `deploy-2026-09-12-opencode-support.md`'s Phase 4 closing notes link back here.
+- `audit-2026-09-12-opencode-package-install-verification.md` — the live verification and both loader fixes.

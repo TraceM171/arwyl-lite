@@ -52,10 +52,11 @@ organized.
   conventions exist, only use them opportunistically when they do (see `handoff`'s `@knowledge/*`
   pointers, which are skipped rather than required when no tree exists).
 - **Nest `arwyl-extras` under a `claude_code/` subfolder to mirror `arwyl-lite`'s multi-tool layout** —
-  rejected for now: that nesting exists in `arwyl-lite` specifically for future non-Claude-Code tool
-  copies (`stack.md`'s "Multi-tool intent"), and `arwyl-extras` has no such copy today (no manual-install
-  / OpenCode variant shipped). Restructure into that shape only if and when a second tool integration is
-  actually built, per `KNOWLEDGE_ORG.md`'s "restructure, do not patch" — not speculatively now.
+  not done. That nesting exists in `arwyl-lite` for non-Claude-Code tool copies (`stack.md`'s "Multi-tool
+  intent"), and the stated revisit trigger — a second tool integration actually built — fired 2026-09-11.
+  `arwyl-extras`' OpenCode variants (`handoff`, `secret-capture`) shipped inside the single `opencode/`
+  folder alongside `arwyl-lite`'s (`deploy-2026-09-12-opencode-support.md`, Phase 3); `arwyl-extras/`
+  itself was not restructured.
 
 ## Consequences accepted
 

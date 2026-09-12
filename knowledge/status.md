@@ -8,20 +8,23 @@
 (`arwyl-extras/.claude-plugin/plugin.json`). Both from marketplace `arwyl-lite-marketplace` → GitHub
 `TraceM171/arwyl-lite`, two `source` entries in one `.claude-plugin/marketplace.json`.
 
-This machine's plugin cache is confirmed on `arwyl-lite` `0.1.17`, not reinstalled since —
-`0.1.18`–`0.1.27` (including this release) are unverified via the cache path on this machine, only
-behavioural (the dev-symlink path runs the working copy directly regardless, see
-`incident-2026-09-02-statusline-unborn-branch-knowledge-repo.md`'s Deliberation). `arwyl-extras`' cache is still
-`0.2.0`, not yet reinstalled here (changes through `0.2.2` were verified by running the working-copy
-scripts directly, not through the plugin cache path). Of the versions since, `0.3.1`, `0.3.3`, and `0.3.4`
-are each confirmed live through a real cache path on a real consumer — see Recent changes below for which
-run confirmed each, and the linked incident/audit files for the evidence; `0.3.2` (superseded same-day)
-and `0.3.5` (not yet installed anywhere) are not cache-verified. `installed_plugins.json`-style metadata
-is not reliable evidence of a consumer's actual version — see `stack.md` — trust the cache path or
-behavioural evidence.
+This machine's plugin cache holds `arwyl-lite` `0.1.27` and `arwyl-extras` `0.3.5` (cache directories
+dated 2026-09-09). A cached directory proves a fetch, not exercised behaviour: `arwyl-lite` `0.1.18`–`0.1.27`
+are unverified via the cache path on this machine, only behavioural (the dev-symlink path runs the working
+copy directly regardless, see `incident-2026-09-02-statusline-unborn-branch-knowledge-repo.md`'s
+Deliberation). `arwyl-extras` changes through `0.2.2` were verified by running the working-copy scripts
+directly, not through the plugin cache path. Of the versions since, `0.3.1`, `0.3.3`, and `0.3.4` are each
+confirmed live through a real cache path on a real consumer — see Recent changes below for which run
+confirmed each, and the linked incident/audit files for the evidence; `0.3.2` (superseded same-day) and
+`0.3.5` are not cache-verified. `installed_plugins.json`-style metadata is not reliable evidence of a
+consumer's actual version — see `stack.md` — trust the cache path or behavioural evidence.
 
 ## Recent changes
 
+- **2026-09-12** — curate: `opencode/package.json`'s `version` is now bumped per ship, same discipline as
+  both `plugin.json`s (owner call). `decision-versioning.md`.
+- **2026-09-12** — curate: retired `phases.md` (OpenCode Phases 1–4 all shipped) to a closed dated record;
+  its still-in-force choices moved into decision files. `deploy-2026-09-12-opencode-support.md`.
 - **2026-09-12** — package's `./tui` export confirmed live too (global install, no local config, real
   session): sidebar rendered correctly. Both halves verified. `decision-package-install.md`.
 - **2026-09-12** — live-verified `opencode/` package's server half via a real `opencode run`; found+fixed
@@ -30,30 +33,33 @@ behavioural evidence.
 - **2026-09-12** — `opencode/` ships as a real package (local-path/npm), bootstrap-on-load pattern with a
   real published precedent; manual symlink kept as Option B. `decision-package-install.md`.
 - **2026-09-12** — OpenCode statusline: drill-down dialogs shipped (knowledge read/edit lists w/ dirty
-  marker, per-repo collapsed diff view). Session diff stays non-interactive by design. `phases.md`.
+  marker, per-repo collapsed diff view). Session diff stays non-interactive by design.
+  `deploy-2026-09-12-opencode-support.md`.
 - **2026-09-12** — OpenCode Phase 4 shipped: `opencode/plugins/statusline.tui.tsx` (`sidebar_footer`:
   git + knowledge + nudges); remaining unknowns verified via daily use, not a further test pass — owner
-  call. `phases.md`.
+  call. `deploy-2026-09-12-opencode-support.md`.
 - **2026-09-12** — OpenCode Phase 4 approved: `sidebar_footer` chosen after live comparison against
   `app_bottom`/`session_prompt_right`; child_process shell-out from a TUI plugin confirmed live.
-  `phases.md`.
+  `deploy-2026-09-12-opencode-support.md`.
 - **2026-09-12** — studied OpenCode statusline port feature-by-feature: nudge delivery is buildable now
   via the existing server plugin + toast, owner sign-off pending; rate-limits/effort stay out of scope.
-  `phases.md` Phase 4, `audit-2026-09-12-opencode-statusline-feasibility.md`.
+  `audit-2026-09-12-opencode-statusline-feasibility.md`.
 - **2026-09-12** — corrected an overstatement in `phases.md`: OpenCode plugin code genuinely can be a
-  real package install (npm/local-path); owner chose to keep manual install anyway. `phases.md`.
+  real package install (npm/local-path); owner chose to keep manual install anyway.
+  `deploy-2026-09-12-opencode-support.md`.
 - **2026-09-11** — shipped OpenCode support Phase 3 (minus the sweep-secrets backstop, deferred):
   `handoff` + `secret-capture` skills, ported simpler than Claude Code's (no backgrounding needed,
-  confirmed live). `phases.md`.
+  confirmed live). `deploy-2026-09-12-opencode-support.md`.
 - **2026-09-11** — shipped OpenCode support Phase 2: `opencode/plugins/status-budget.js`, a JS port
-  (not a shell-out) of the status-budget check, verified end-to-end via a real `opencode run`. `phases.md`.
+  (not a shell-out) of the status-budget check, verified end-to-end via a real `opencode run`.
+  `deploy-2026-09-12-opencode-support.md`.
 - **2026-09-11** — confirmed live: OpenCode's `tool.execute.after` hook can inject context (mutate
   `output.output`), unblocking Phase 2. `audit-2026-09-11-opencode-hook-injection-test.md`.
 - **2026-09-11** — shipped OpenCode support Phase 1: `opencode/AGENTS.md` +
   `opencode/skills/{reflect,curate,knowledge-org}/SKILL.md`, README setup section. No plugin/hook code —
-  OpenCode loads `AGENTS.md` natively. `phases.md`.
+  OpenCode loads `AGENTS.md` natively. `deploy-2026-09-12-opencode-support.md`.
 - **2026-09-11** — planned OpenCode support: phased plan plus the multi-tool ground rule made explicit
-  as its own decision file. `phases.md`, `decision-multi-tool-integration.md`.
+  as its own decision file. `decision-multi-tool-integration.md`, `deploy-2026-09-12-opencode-support.md`.
 - **2026-09-08** — field study of AI-setup: live-capture fan-out — one open vendor question
   propagated across 5 files, 6x, in one session. Gated in AGENTS.md/KNOWLEDGE_ORG.md. `0.1.27`.
   `audit-2026-09-08-field-study-ai-setup-live-capture.md`.
@@ -144,19 +150,17 @@ behavioural evidence.
 
 ## Open
 
-- OpenCode Phases 1-4 all done/shipped — `phases.md` is now a candidate for retirement (`git mv` to a
-  dated record, its own "On completion" rule); fresh-eyes call, not done this session. `phases.md`.
-- Reinstall `arwyl-extras` (latest) on this machine and on the field-test consumer, then re-verify
-  `secret-capture` from the actual cache path (the `0.2.1`–`0.3.1` changes were only verified against the
-  working copy directly).
+- Re-verify `secret-capture` from the actual plugin cache path — `0.3.5` is now cached on this machine, but
+  the `0.2.1`–`0.3.1` changes were only verified against the working copy directly.
 - `thorough` `deep`: real-world-verified across four consumers, including one full completion with no
   session-limit hit (`0.3.5`). Still open: cross-account resume, harness-enforced write scoping, `max`
   unrun, no session-limit figure in the cost warning — full list in `decision-thorough-skill.md`'s
   "Consequences accepted".
 - `secret-capture`'s macOS (`osascript`) and Windows dialog paths are unverified — only the Linux
   X11/Wayland `zenity` path has a real end-to-end test. Confirm or fix when either platform is next used.
-- `secret-capture` deliberately ships without a guard hook or an MCP-tool interface — both are scope
-  choices with stated revisit triggers, not unfinished work. `decision-secret-capture-scope.md`.
+- OpenCode port gaps: no `sweep-secrets` backstop yet (`decision-secret-capture-scope.md`); statusline
+  reflect/curate detection and nonzero read/edit counts not yet exercised, checked via daily use
+  (`decision-opencode-statusline-design.md`).
 - `secret-capture` is categorically blocked by Claude Code's auto-mode classifier; confirmed working
   under manual mode. Auto-mode-with-allowlist specifically is untested, not known to fail.
   `incident-2026-07-31-secret-capture-auto-mode-block.md`.

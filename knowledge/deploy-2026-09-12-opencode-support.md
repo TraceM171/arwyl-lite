@@ -1,21 +1,31 @@
-# Phases — OpenCode support
+# Deploy — OpenCode support, Phases 1–4 (2026-09-11 → 2026-09-12)
+
+**Closed 2026-09-12.** Formerly `phases.md`, the cross-domain plan for OpenCode support. Converted to this
+dated record on completion (`KNOWLEDGE_ORG.md`'s plan-completion rule) rather than deleted, because it had
+accreted a real build narrative and closed dated files link to it. **Frozen files that cite `phases.md` mean
+this file.**
+
+Choices recorded below that are still in force now live in decision files — edited there, not here:
+
+- the ground rule, and `thorough`'s exclusion from the port — `decision-multi-tool-integration.md`
+- Phase 3's deferred `sweep-secrets` backstop — `decision-secret-capture-scope.md`
+- Phase 4's statusline design, including the rate-limit/effort exclusions — `decision-opencode-statusline-design.md`
+- the package install, including "no `opencode` entry in `marketplace.json`" — `decision-package-install.md`
+
+**Correction noted at closure:** Phase 1's "Claude Code needs both a top-level copy … and a packaged
+`skills/*/SKILL.md` copy" describes two install paths served by one file plus a symlink (git mode `120000`),
+not two copies — `incident-2026-07-31-arwyl-extras-symlink.md`.
 
 **Goal:** Ship `opencode/` as a second top-level tool-integration folder (alongside `claude_code/`),
 carrying real, adapted copies of arwyl-lite's knowledge-tree conventions and, later, arwyl-extras'
 portable capabilities — governed by `decision-multi-tool-integration.md`.
 
-**Current phase:** Phase 1 and Phase 2 done. Phase 3 done except its `sweep-secrets` backstop, deliberately
+**Final state:** Phase 1 and Phase 2 done. Phase 3 done except its `sweep-secrets` backstop, deliberately
 deferred (see Phase 3 below). Phase 4 (statusline-port nudge/status delivery) is **done and shipped** —
 `opencode/plugins/statusline.tui.tsx`, `sidebar_footer` chosen by live comparison against
 `app_bottom`/`session_prompt_right`. Remaining unknowns (reflect/curate detection shape, `read` tool arg
 shape, real nonzero session-diff/knowledge-count data) are being verified through daily use rather than a
 further synthetic test pass — owner call, see Phase 4's closing note.
-
-**On completion:** free this reserved name — do not leave a finished plan squatting it
-(`KNOWLEDGE_ORG.md`'s "Open entries are pointers, not plans", plan-completion rule). Default: delete this
-file, leave one final pointer line in `status.md`, git history keeps the record. Only `git mv` this to a
-dated `deploy-`/`audit-` file instead if it accretes a real build narrative (deviations, a compatibility
-matrix, mid-flight calls) worth preserving as a record in its own right.
 
 ## Phase 1 — arwyl-lite core (done, 2026-09-11)
 
