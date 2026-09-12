@@ -1,8 +1,8 @@
 # Arwyl Lite — Knowledge Base Index
 
-Arwyl Lite is structured knowledge-tree conventions and Claude Code tooling for agent-assisted development: a six-kinds taxonomy (index / status / model / decision / audit / pattern) plus a per-X convention for organizing a project's `knowledge/` tree, packaged as a Claude Code plugin — skills `reflect`, `curate`, `knowledge-org`; a `SessionStart` hook; a status line script. A sibling plugin, `arwyl-extras` (`arwyl-extras/`), ships capabilities with no knowledge-tree dependency: `handoff` and `secret-capture` — see `decision-plugin-split.md`.
+Arwyl Lite is structured knowledge-tree conventions and agent tooling for agent-assisted development: a six-kinds taxonomy (index / status / model / decision / audit / pattern) plus a per-X convention for organizing a project's `knowledge/` tree, packaged as a Claude Code plugin — skills `reflect`, `curate`, `knowledge-org`; a `SessionStart` hook; a status line script — and, for OpenCode, real adapted copies of the same `reflect`/`curate`/`knowledge-org` skills with no hook/status-line equivalent yet (`decision-multi-tool-integration.md`). A sibling plugin, `arwyl-extras` (`arwyl-extras/`), ships capabilities with no knowledge-tree dependency: `handoff` and `secret-capture` — see `decision-plugin-split.md`.
 
-For current state, see `status.md`. For distribution and design mechanics, see `stack.md`; for a choice still in force and why, see the `decision-*.md` files. No domain subdirectories yet — flat structure, by design, until enough content accumulates to justify one (per `KNOWLEDGE_ORG.md`'s "choosing domains") — the first candidate is a `consumers/` per-X domain, once there's a second consumer or tool integration.
+For current state, see `status.md`. For distribution and design mechanics, see `stack.md`; for a choice still in force and why, see the `decision-*.md` files. No domain subdirectories yet — flat structure, by design, until enough content accumulates to justify one (per `KNOWLEDGE_ORG.md`'s "choosing domains") — the first candidate is a `consumers/` per-X domain, once there's a second consumer (a project consuming arwyl-lite). A second *tool* integration (e.g. `opencode/`, see `phases.md`) does not trigger this — it is a product payload, not a knowledge domain.
 
 ## Subdirectory map
 
@@ -10,6 +10,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 |------|----------|
 | `_basic.md` | this file — project index |
 | `stack.md` | distribution and design mechanics — what we use and how it works |
+| `phases.md` | cross-domain ordered plan — currently: OpenCode support |
 | `decision-taxonomy-kinds.md` | the six kinds — why, and the alternatives rejected |
 | `decision-versioning.md` | explicit semver, bumped on every ship — why, and the SHA-versioning alternative rejected |
 | `decision-retrievability.md` | retrievability as a second placement axis — why (preventive) |
@@ -17,6 +18,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `decision-plugin-split.md` | why `handoff` and `secret-capture` live in `arwyl-extras`, not `arwyl-lite` |
 | `decision-secret-capture-scope.md` | why `secret-capture` has no guard hook and no MCP-tool interface (yet) |
 | `decision-thorough-skill.md` | leveled `thorough` skill in `arwyl-extras` (any domain, not investigation-only) — why leveled/opt-in, not a blanket mechanism |
+| `decision-multi-tool-integration.md` | why each tool gets real adapted copies, not a shared abstraction — for `opencode/` and beyond |
 | `audit-2026-07-17-retrievability-burial-test.md` | the burial test: design, results, why it didn't reproduce |
 | `audit-2026-07-29-field-study-curate.md` | field study of a consumer's first curate pass: 6 findings, what worked |
 | `audit-2026-08-29-field-study-thescriv.md` | field study of a second consumer (mobile app): 1 confirmed gap (plan-slot / plan-completion), rule fixes in `0.1.25`, and what's working confirmed at N=2 |
@@ -32,6 +34,9 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 | `audit-2026-09-02-field-study-ai-setup.md` | first full `deep` completion (a fourth consumer): a non-collapsing checklist status line and an over-length `investigator` report, both fixed in `0.3.5` |
 | `incident-2026-09-02-statusline-unborn-branch-knowledge-repo.md` | `knowledge:` git segment silently dropped for a freshly `git init`'d, zero-commit `knowledge/` repo; fixed in `0.1.26` |
 | `audit-2026-09-08-field-study-ai-setup-live-capture.md` | second field study of AI-setup: live-capture fan-out on unconfirmed conclusions, 6 capture rounds for one open question in one session; fixed in `0.1.27` |
+| `audit-2026-09-11-opencode-hook-injection-test.md` | live test: OpenCode's `tool.execute.after` can inject model context via `output.output` — unblocks `phases.md` phase 2 |
+| `audit-2026-09-11-opencode-bash-async-and-atref-test.md` | live tests: bash-tool detachment mechanics, a 90s+ synchronous call survives with no cap, `@file` pointers don't auto-expand in skill content — shaped `phases.md` phase 3 |
+| `audit-2026-09-12-opencode-statusline-feasibility.md` | feature-by-feature statusline port study — narrows `phases.md`'s blanket "Not planned" |
 | `status.md` | current version, recent changes, open items |
 | `_curated.md` | reserved marker — UTC timestamp of the last `curate` pass, read by the status line |
 | `.local/_basic.md` | owner-specific context |
@@ -45,7 +50,7 @@ For current state, see `status.md`. For distribution and design mechanics, see `
 
 ## What this project is
 
-The product is `claude_code/` (plugin `arwyl-lite`) and `arwyl-extras/` (plugin `arwyl-extras`) — two independently installable payloads other projects consume, both from the same `arwyl-lite-marketplace` (see root `README.md`; why two, `decision-plugin-split.md`). This `knowledge/` tree is Arwyl Lite dogfooding its own conventions on itself — it is not the product.
+The product is `claude_code/` (plugin `arwyl-lite`) and `arwyl-extras/` (plugin `arwyl-extras`) — two independently installable Claude Code payloads, both from the same `arwyl-lite-marketplace` (see root `README.md`; why two, `decision-plugin-split.md`) — plus `opencode/`, a files-only (no plugin system) integration for OpenCode, real adapted copies rather than a shared abstraction (`decision-multi-tool-integration.md`, `phases.md`). This `knowledge/` tree is Arwyl Lite dogfooding its own conventions on itself — it is not the product.
 
 ## Philosophy
 

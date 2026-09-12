@@ -1,6 +1,6 @@
 # Status — Current State
 
-**As of 2026-09-08.**
+**As of 2026-09-12.**
 
 ## Current version
 
@@ -22,6 +22,29 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-09-12** — OpenCode Phase 4 shipped: `opencode/plugins/statusline.tui.tsx` (`sidebar_footer`:
+  git + knowledge + nudges); remaining unknowns verified via daily use, not a further test pass — owner
+  call. `phases.md`.
+- **2026-09-12** — OpenCode Phase 4 approved: `sidebar_footer` chosen after live comparison against
+  `app_bottom`/`session_prompt_right`; child_process shell-out from a TUI plugin confirmed live.
+  `phases.md`.
+- **2026-09-12** — studied OpenCode statusline port feature-by-feature: nudge delivery is buildable now
+  via the existing server plugin + toast, owner sign-off pending; rate-limits/effort stay out of scope.
+  `phases.md` Phase 4, `audit-2026-09-12-opencode-statusline-feasibility.md`.
+- **2026-09-12** — corrected an overstatement in `phases.md`: OpenCode plugin code genuinely can be a
+  real package install (npm/local-path); owner chose to keep manual install anyway. `phases.md`.
+- **2026-09-11** — shipped OpenCode support Phase 3 (minus the sweep-secrets backstop, deferred):
+  `handoff` + `secret-capture` skills, ported simpler than Claude Code's (no backgrounding needed,
+  confirmed live). `phases.md`.
+- **2026-09-11** — shipped OpenCode support Phase 2: `opencode/plugins/status-budget.js`, a JS port
+  (not a shell-out) of the status-budget check, verified end-to-end via a real `opencode run`. `phases.md`.
+- **2026-09-11** — confirmed live: OpenCode's `tool.execute.after` hook can inject context (mutate
+  `output.output`), unblocking Phase 2. `audit-2026-09-11-opencode-hook-injection-test.md`.
+- **2026-09-11** — shipped OpenCode support Phase 1: `opencode/AGENTS.md` +
+  `opencode/skills/{reflect,curate,knowledge-org}/SKILL.md`, README setup section. No plugin/hook code —
+  OpenCode loads `AGENTS.md` natively. `phases.md`.
+- **2026-09-11** — planned OpenCode support: phased plan plus the multi-tool ground rule made explicit
+  as its own decision file. `phases.md`, `decision-multi-tool-integration.md`.
 - **2026-09-08** — field study of AI-setup: live-capture fan-out — one open vendor question
   propagated across 5 files, 6x, in one session. Gated in AGENTS.md/KNOWLEDGE_ORG.md. `0.1.27`.
   `audit-2026-09-08-field-study-ai-setup-live-capture.md`.

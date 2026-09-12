@@ -11,7 +11,7 @@ Chosen approach for distributing and versioning Arwyl Lite, and how the moving p
 ## Distribution
 
 - **Channel**: GitHub marketplace `TraceM171/arwyl-lite`, plugin name `arwyl-lite`, marketplace name `arwyl-lite-marketplace`. Previously named `agents-knowledge` (renamed `cda2226`).
-- **Multi-tool intent, not multi-tool sharing**: `claude_code/` today; other tools (e.g. OpenCode) get their own top-level folder with real, adapted copies — not one abstraction shared across tools.
+- **Multi-tool intent, not multi-tool sharing**: `claude_code/` today, `opencode/` in progress — why real per-tool copies rather than one shared abstraction: `decision-multi-tool-integration.md`. Plan: `phases.md`.
 
 ## This repo runs its own plugin
 
