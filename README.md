@@ -85,15 +85,19 @@ as Claude Code, it only does anything in a project that already has a `knowledge
 that folder (`mkdir knowledge`) is still the deliberate first step of adopting this in a new project;
 the plugin never does it for you, global install or not — it would otherwise force-scaffold
 `AGENTS.md`/skills into every unrelated repo `opencode` happens to open. Once `knowledge/` exists, the
-next `opencode` launch in that project bootstraps `AGENTS.md`, the five skills, the two secret-capture
-scripts, and the `knowledge/.local` scaffold onto disk automatically — never overwriting anything
-that already exists — then runs the exact same `status-budget` check and `statusline` sidebar Option
-B installs by hand, with no per-file symlinking needed. Both halves are live-confirmed: the server side
-via a headless `opencode run` against a clean directory (full bootstrapped tree, no errors) and the
-`./tui` side via a real interactive session with only the global install in play, no project-local
-config at all — the sidebar rendered correctly. See `knowledge/decision-package-install.md` for the
-full verification log, including a real gotcha it caught (the package needs a plain `main` field —
-`exports` alone silently did not resolve for a local-path plugin).
+next `opencode` launch in that project installs `AGENTS.md`, the five skills, the two secret-capture
+scripts, and the `knowledge/.local` scaffold onto disk automatically, then runs the exact same
+`status-budget` check and `statusline` sidebar Option B installs by hand, with no per-file symlinking
+needed. **Updating the package replaces what it installed**: changed files are rewritten, and a skill or
+script a newer version no longer ships is removed (tracked in `.opencode/.arwyl-lite-manifest.json`). Your
+own skills in `.opencode/skills/`, any symlinked (Option B) path, and an `AGENTS.md` your project already
+had are never touched — so don't edit the installed copies of this package's skills, since the next load
+replaces them. Both halves are live-confirmed: the server side via a headless `opencode run` against a
+clean directory (full bootstrapped tree, no errors) and the `./tui` side via a real interactive session
+with only the global install in play, no project-local config at all — the sidebar rendered correctly. See
+`knowledge/audit-2026-09-12-opencode-package-install-verification.md` for the full verification log,
+including a real gotcha it caught (the package needs a plain `main` field — `exports` alone silently did
+not resolve for a local-path plugin).
 
 ### Option B: manual
 

@@ -4,12 +4,19 @@
 **Decision:** `opencode/` ships as a real package (`opencode/package.json`, local-path installable today,
 npm-publishable later with no structural change) alongside the existing manual-symlink path — Option A and
 Option B, the same split Claude Code already has. `opencode/plugins/server.js` is the package's server
-export: on first load in a project **that already has a `knowledge/` directory**, it bootstraps
-`AGENTS.md`, the five skills, the two secret-capture scripts, and the `knowledge/.local` scaffold onto disk
-(skipping anything that already exists), then delegates to `status-budget.js`'s existing hook, imported not
-duplicated. Without an existing `knowledge/` directory the plugin is completely inert — it touches nothing.
+export: on every load in a project **that already has a `knowledge/` directory**, it syncs `AGENTS.md`, the
+five skills, and the two secret-capture scripts to the package's current content and fills in the
+`knowledge/.local` scaffold, then delegates to `status-budget.js`'s existing hook, imported not duplicated.
+Without an existing `knowledge/` directory the plugin is completely inert — it touches nothing.
 `opencode/plugins/statusline.tui.tsx` is the package's `./tui` export, reused as-is — no second copy of
 either file exists for the package path.
+
+**Updating the package replaces what it installed** (owner call, 2026-09-12): changed files are rewritten,
+a skill or script a newer version no longer ships is removed, unchanged files are left untouched. What the
+package installed is recorded in `.opencode/.arwyl-lite-manifest.json`, which is how an update tells its own
+dropped skills apart from the project's own. It never touches a symlink (a manual Option-B install owns
+it) or an `AGENTS.md` the project already had — `AGENTS.md` is replaced only if the package wrote it
+(recorded in the manifest, or still byte-identical to the package's copy).
 
 ## Why (current reasoning)
 
@@ -34,6 +41,9 @@ either file exists for the package path.
   field — a convention read directly from a real working example (`AI-setup/harness`'s own TUI plugin
   package), not guessed. Both config files point at the *same* package path/name, so a consumer only has
   one location to reference regardless of which plugin kind is being loaded.
+- **Updates replace, not skip.** The first version copied only what was missing, so a package update never
+  reached a project that had already bootstrapped — its skills stayed on whatever version first installed
+  them. An update is supposed to deliver the new skills, the same way a Claude Code plugin update does.
 - **Verified live through OpenCode's own loader, both halves** — not just in isolation. Resolution goes
   through `package.json`'s `main` field (the `exports` map alone silently loads nothing for the root entry
   point), and `main` does not interfere with `tui.json` + `oc-plugin` routing to `./tui`. The sequence, and
@@ -59,6 +69,7 @@ either file exists for the package path.
 - **An `opencode` entry in `.claude-plugin/marketplace.json`** — whatever install story `opencode/` uses, it
   isn't a Claude Code plugin (`incident-2026-08-31-arwyl-extras-invalid-agents-key.md` is what
   manifest-guessing costs).
+- **Copy only what is missing** (the first shipped version) — updates never landed; see Why.
 
 ## Consequences accepted
 
@@ -74,6 +85,9 @@ either file exists for the package path.
   brand-new project remains a deliberate manual step (`mkdir knowledge`) under both install options. A side
   effect in this repo, which has a `knowledge/` tree of its own: `stack.md`'s "This repo runs its own
   plugin".
+- **A consumer's local edits to a package-installed file are overwritten** on the next load — the installed
+  skills, scripts, and a package-written `AGENTS.md` belong to the package, the same as a Claude Code
+  plugin's cached files do.
 
 ## Deliberation
 
@@ -82,3 +96,4 @@ either file exists for the package path.
   surface grew, researched against OpenCode's official docs plus real published community plugins, and
   decided the same session. `deploy-2026-09-12-opencode-support.md`'s Phase 4 closing notes link back here.
 - `audit-2026-09-12-opencode-package-install-verification.md` — the live verification and both loader fixes.
+- Curate pass, 2026-09-12 — the owner's call that updates replace installed files rather than skip them.

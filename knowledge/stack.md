@@ -12,7 +12,7 @@ Chosen approach for distributing and versioning Arwyl Lite, and how the moving p
 
 - **Channel**: GitHub marketplace `TraceM171/arwyl-lite`, plugin name `arwyl-lite`, marketplace name `arwyl-lite-marketplace`. Previously named `agents-knowledge` (renamed `cda2226`).
 - **Multi-tool intent, not multi-tool sharing**: `claude_code/` and `opencode/` — why real per-tool copies rather than one shared abstraction: `decision-multi-tool-integration.md`.
-- **OpenCode**: `opencode/` is an installable package (`opencode/package.json` — local path today; the server export bootstraps `AGENTS.md`/skills/scripts into a project that already has `knowledge/`, the `./tui` export is the statusline), or symlinked in manually — `decision-package-install.md`. Its `version` is bumped per ship like `plugin.json`'s (`decision-versioning.md`). It is not a Claude Code plugin and has no `marketplace.json` entry.
+- **OpenCode**: `opencode/` is an installable package (`opencode/package.json` — local path today; the server export installs `AGENTS.md`/skills/scripts into a project that already has `knowledge/` and replaces them when the package updates, the `./tui` export is the statusline), or symlinked in manually — `decision-package-install.md`. Its `version` is bumped per ship like `plugin.json`'s (`decision-versioning.md`). It is not a Claude Code plugin and has no `marketplace.json` entry.
 
 ## This repo runs its own plugin
 
@@ -20,7 +20,7 @@ Arwyl Lite is installed in its own repo at project scope (`.claude/settings.json
 
 The parts that can be wired to the **working copy** rather than the plugin cache are: the status line points at this checkout's `claude_code/statusline.py`, and `.claude/settings.json` points the status-budget hook at `claude_code/hooks/status-budget.sh` (see "Enforcement mechanisms"). Both exist so edits are visible immediately, without a version bump or reinstall cycle, while actively developing. Everything loaded *as a plugin* — the skills, the `SessionStart` hook — still comes from the version-pinned cache, so skill-text changes need the normal bump-and-reinstall round trip to be exercised here (`decision-versioning.md`).
 
-**OpenCode, same repo.** This repo has a `knowledge/` directory but no root `AGENTS.md`/`.opencode/` — it was never set up as a *consumer* of its own plugin. With the OpenCode package installed globally, any `opencode` run here passes the bootstrap gate (`decision-package-install.md`) and writes `AGENTS.md` + `.opencode/skills` + `.opencode/scripts` into the repo root — byte-identical to `opencode/AGENTS.md` / `opencode/skills/*`, not divergent content. Untracked and harmless, but it reappears every time `opencode` touches this repo while a global install is active; `rm -rf .opencode AGENTS.md` at the repo root clears it.
+**OpenCode, same repo.** This repo has a `knowledge/` directory but no root `AGENTS.md`/`.opencode/` — it was never set up as a *consumer* of its own plugin. With the OpenCode package installed globally, any `opencode` run here passes the bootstrap gate (`decision-package-install.md`) and writes `AGENTS.md` + `.opencode/skills` + `.opencode/scripts` + `.opencode/.arwyl-lite-manifest.json` into the repo root — byte-identical to `opencode/AGENTS.md` / `opencode/skills/*`, not divergent content. Untracked and harmless, but it reappears every time `opencode` touches this repo while a global install is active; `rm -rf .opencode AGENTS.md` at the repo root clears it.
 
 ## Version-bump-for-cache
 

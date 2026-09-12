@@ -21,6 +21,11 @@ consumer's actual version — see `stack.md` — trust the cache path or behavio
 
 ## Recent changes
 
+- **2026-09-12** — OpenCode package: an update now replaces what it installed (changed files rewritten,
+  dropped skills removed, manifest-tracked); the project's own skills, `AGENTS.md`, and symlinks stay
+  untouched. `0.1.1`. `decision-package-install.md`.
+- **2026-09-12** — `AGENTS.md` budget reaffirmed fixed at 9,000 (owner: no more raises);
+  `.githooks/pre-commit`'s failure message no longer offers raising it. `decision-agents-md-budget.md`.
 - **2026-09-12** — curate: `opencode/package.json`'s `version` is now bumped per ship, same discipline as
   both `plugin.json`s (owner call). `decision-versioning.md`.
 - **2026-09-12** — curate: retired `phases.md` (OpenCode Phases 1–4 all shipped) to a closed dated record;
