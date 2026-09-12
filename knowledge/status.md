@@ -22,6 +22,8 @@ behavioural evidence.
 
 ## Recent changes
 
+- **2026-09-12** — OpenCode statusline: drill-down dialogs shipped (knowledge read/edit lists w/ dirty
+  marker, per-repo collapsed diff view). Session diff stays non-interactive by design. `phases.md`.
 - **2026-09-12** — OpenCode Phase 4 shipped: `opencode/plugins/statusline.tui.tsx` (`sidebar_footer`:
   git + knowledge + nudges); remaining unknowns verified via daily use, not a further test pass — owner
   call. `phases.md`.

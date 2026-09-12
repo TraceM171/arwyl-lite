@@ -179,6 +179,16 @@ several repos and layouts (background/color/spacing polish, a stderr-leak fix, a
 `path.relative` semantics bug in the curate-drift pathspec) — see the audit's "Live verification"
 sections for the full list.
 
+**Also shipped, same day:** drill-down dialogs closing the one real parity gap left after the initial
+ship — clicking the knowledge read/edit count opens a dialog listing read/edited files (edited files
+carry the same `dirty`-since-last-reflect marker the original's detail page used, confirmed present at
+`claude_code/statusline.py:172-176/622-625`); clicking any repo line opens a dialog with that repo's
+changed-file list, collapsed by default, each file expanding on click to show its real diff body (colored
+via the theme's own diff palette). Deliberately **not** built for the session-scoped diff — `session_diff()`
+only returns counts, and there's no clean way to attribute "what the agent touched this session" as a
+real patch the way a repo's own `git diff` can; the session line stays plain text, non-interactive.
+Remaining known gap, not pursued: rate-limit countdowns and effort-level display (Not Planned, unchanged).
+
 **Deliberate owner call: no further live-probe verification before shipping.** The reflect/curate
 detection's exact `session.messages()`/`part()` shape, the `read` tool's exact arg field name (Phase 2
 only confirmed `write`/`edit`'s), and the session-diff/knowledge-count segments with real nonzero data

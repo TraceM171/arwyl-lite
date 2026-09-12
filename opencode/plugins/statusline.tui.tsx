@@ -26,6 +26,8 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { join, relative } from "node:path"
 import { createSignal, onCleanup, onMount, Show } from "solid-js"
 
+type Theme = TuiPluginApi["theme"]["current"]
+
 const REFRESH_MS = 3000
 const EDIT_BUDGET_TRIGGER = 8
 const TOOL_CALL_ACTIVITY_TRIGGER = 45
@@ -153,6 +155,88 @@ function findGitRepos(root: string, maxDepth = 3): string[] {
     if (frontier.length === 0) break
   }
   return repos
+}
+
+// Per-file diffstat for the dialog's file list — statusline.py's own `git diff --numstat HEAD`
+// parsing (a is/-'s'-marked line means binary, skipped).
+function gitFileStats(repoPath: string): Array<{ path: string; a: number; d: number }> {
+  try {
+    const out = execFileSync("git", ["-C", repoPath, "diff", "--numstat", "HEAD"], {
+      encoding: "utf8",
+      stdio: QUIET_STDIO,
+    })
+    const stats: Array<{ path: string; a: number; d: number }> = []
+    for (const line of out.split("\n")) {
+      const parts = line.split("\t")
+      if (parts.length !== 3) continue
+      const [a, d, path] = parts
+      if (a === "-" || d === "-") continue
+      stats.push({ path, a: Number(a), d: Number(d) })
+    }
+    return stats
+  } catch {
+    return []
+  }
+}
+
+// Direct port of statusline.py's git_diff_patches: `git diff HEAD -- <paths>`, split per file at
+// `diff --git a/X b/Y` headers, keeping only the hunk lines (from the first `@@` on).
+function gitDiffPatches(repoPath: string, paths: string[]): Record<string, string> {
+  if (paths.length === 0) return {}
+  let out: string
+  try {
+    out = execFileSync("git", ["-C", repoPath, "diff", "HEAD", "--", ...paths], {
+      encoding: "utf8",
+      stdio: QUIET_STDIO,
+    })
+  } catch {
+    return {}
+  }
+  const patches: Record<string, string> = {}
+  let currentPath: string | undefined
+  let currentLines: string[] = []
+  let inHunk = false
+  for (const line of out.split("\n")) {
+    const m = line.match(/^diff --git a\/(?:.*) b\/(.*)$/)
+    if (m) {
+      if (currentPath !== undefined) patches[currentPath] = currentLines.join("\n")
+      currentPath = m[1]
+      currentLines = []
+      inHunk = false
+      continue
+    }
+    if (line.startsWith("@@")) inHunk = true
+    if (inHunk) currentLines.push(line)
+  }
+  if (currentPath !== undefined) patches[currentPath] = currentLines.join("\n")
+  return patches
+}
+
+function truncateDiffLines(lines: string[], max = 300): string[] {
+  if (lines.length <= max) return lines
+  return [...lines.slice(0, max), `… truncated (${lines.length - max} more lines)`]
+}
+
+function diffLineColor(theme: Theme, line: string) {
+  if (line.startsWith("@@")) return theme.diffHunkHeader
+  if (line.startsWith("+") && !line.startsWith("+++")) return theme.diffAdded
+  if (line.startsWith("-") && !line.startsWith("---")) return theme.diffRemoved
+  return theme.diffContext
+}
+
+// Dialog frame geometry — read from arwyl-lite's own reference doc
+// (../AI-setup/knowledge/plugin/opencode-plugin-api.md, "Dialog frame geometry"): panel width is a
+// fixed constant per size clamped to terminalWidth-2, and there's no maxHeight, so content must be
+// bounded by the plugin itself (a scrollbox) rather than relying on the dialog to clip it.
+function dialogSizeFor(cols: number): "medium" | "large" | "xlarge" {
+  const usable = cols - 2
+  if (usable >= 116) return "xlarge"
+  if (usable >= 88) return "large"
+  return "medium"
+}
+
+function usableDialogRows(rows: number): number {
+  return rows - Math.round(rows / 4) - 1
 }
 
 function countFilesRecursive(dir: string): number {
@@ -376,8 +460,9 @@ function curateDrift(knowledgeDir: string, totalFiles: number): { changed: numbe
 type Snapshot = {
   sessionIns: number
   sessionDel: number
-  repos: Array<{ label: string; status: GitStatus }>
-  knowledgeGit?: GitStatus
+  repos: Array<{ label: string; path: string; status: GitStatus }>
+  knowledgeRepo?: { path: string; status: GitStatus }
+  knowledgeDir: string
   totalKnowledgeFiles: number
   activity: Activity
   reflectTrigger?: string
@@ -407,8 +492,8 @@ function computeSnapshot(api: TuiPluginApi, sessionId: string): Snapshot {
   const knowledgeIsRepo = allRepos.includes(knowledgeDir)
   const repos = allRepos
     .filter((r) => r !== knowledgeDir)
-    .map((r) => ({ label: r === directory ? "" : relative(directory, r) + "/ ", status: gitStatus(r) }))
-  const knowledgeGit = knowledgeIsRepo ? gitStatus(knowledgeDir) : undefined
+    .map((r) => ({ label: r === directory ? "" : relative(directory, r) + "/ ", path: r, status: gitStatus(r) }))
+  const knowledgeRepo = knowledgeIsRepo ? { path: knowledgeDir, status: gitStatus(knowledgeDir) } : undefined
 
   const totalKnowledgeFiles = knowledgeExists ? countFilesRecursive(knowledgeDir) : 0
   const activity = knowledgeExists ? computeActivity(api, sessionId, knowledgeDir + "/") : emptyActivity()
@@ -441,14 +526,149 @@ function computeSnapshot(api: TuiPluginApi, sessionId: string): Snapshot {
   const drift = knowledgeExists ? curateDrift(knowledgeDir, totalKnowledgeFiles) : undefined
   const curateTrigger = Boolean(drift?.trigger)
 
-  return { sessionIns, sessionDel, repos, knowledgeGit, totalKnowledgeFiles, activity, reflectTrigger, curateTrigger }
+  return {
+    sessionIns,
+    sessionDel,
+    repos,
+    knowledgeRepo,
+    knowledgeDir,
+    totalKnowledgeFiles,
+    activity,
+    reflectTrigger,
+    curateTrigger,
+  }
 }
 
-function gitDotColor(theme: TuiPluginApi["theme"]["current"], g: GitStatus) {
+function gitDotColor(theme: Theme, g: GitStatus) {
   if (!g.ok) return theme.error
   if (g.ins || g.del) return theme.warning
   if (g.ahead || g.behind) return theme.info
   return theme.success
+}
+
+// Colored diff body — DiffBody per statusline.py's _diff_html, one <text> row per line so each
+// line's color is independent (opentui text color applies per-span, not per-character-run across
+// a multi-line string).
+function DiffBody(props: { theme: Theme; text: string }) {
+  const lines = truncateDiffLines(props.text.split("\n"))
+  return (
+    <box flexDirection="column" gap={0}>
+      {lines.map((line) => (
+        <text>
+          <span style={{ fg: diffLineColor(props.theme, line) }}>{line.length ? line : " "}</span>
+        </text>
+      ))}
+    </box>
+  )
+}
+
+// Knowledge-activity dialog — the read/edited file lists from statusline.py's knowledge detail
+// page. `dirty` (editedSinceReflect) gets the same "dirty" marker the Python version's dirty-badge
+// used, confirmed present in the original at claude_code/statusline.py:172-176/622-625.
+function KnowledgeDialogBody(props: {
+  theme: Theme
+  knowledgeDir: string
+  readFiles: string[]
+  editedFiles: string[]
+  dirty: Set<string>
+  rows: number
+}) {
+  const rel = (p: string) => relative(props.knowledgeDir, p)
+  return (
+    <scrollbox scrollY height={props.rows} contentOptions={{ flexDirection: "column" }}>
+      <text>
+        <span style={{ fg: props.theme.text }}>{"Read"}</span>
+      </text>
+      <Show
+        when={props.readFiles.length > 0}
+        fallback={
+          <text>
+            <span style={{ fg: props.theme.textMuted }}>{"none"}</span>
+          </text>
+        }
+      >
+        <box flexDirection="column" gap={0}>
+          {props.readFiles.map((p) => (
+            <text>
+              <span style={{ fg: props.theme.text }}>{rel(p)}</span>
+            </text>
+          ))}
+        </box>
+      </Show>
+      <text>{" "}</text>
+      <text>
+        <span style={{ fg: props.theme.text }}>{"Edited"}</span>
+      </text>
+      <Show
+        when={props.editedFiles.length > 0}
+        fallback={
+          <text>
+            <span style={{ fg: props.theme.textMuted }}>{"none"}</span>
+          </text>
+        }
+      >
+        <box flexDirection="column" gap={0}>
+          {props.editedFiles.map((p) => (
+            <text>
+              <span style={{ fg: props.theme.text }}>{rel(p)}</span>
+              <span style={{ fg: props.theme.warning }}>{props.dirty.has(p) ? "  dirty" : ""}</span>
+            </text>
+          ))}
+        </box>
+      </Show>
+    </scrollbox>
+  )
+}
+
+// Per-repo diff dialog — the "Changed files" page from statusline.py, real patch bodies via
+// gitDiffPatches. Not built for the session-scoped diff (owner call): session.diff() only gives
+// counts, and there's no clean way to attribute "what the agent touched this session" as a real
+// patch the way a repo's `git diff` naturally can — the risk of a misleading diff outweighs it.
+function RepoDialogBody(props: {
+  theme: Theme
+  files: Array<{ path: string; a: number; d: number }>
+  patches: Record<string, string>
+  rows: number
+}) {
+  // Collapsed by default, matching the original's <details>/<summary> — only the changed-files
+  // list shows up front; clicking a row expands that file's own diff, not every diff at once.
+  const [expanded, setExpanded] = createSignal<Set<string>>(new Set())
+  const toggle = (path: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(path)) next.delete(path)
+      else next.add(path)
+      return next
+    })
+  }
+  return (
+    <scrollbox scrollY height={props.rows} contentOptions={{ flexDirection: "column" }}>
+      <Show
+        when={props.files.length > 0}
+        fallback={
+          <text>
+            <span style={{ fg: props.theme.textMuted }}>{"no changes"}</span>
+          </text>
+        }
+      >
+        <box flexDirection="column" gap={0}>
+          {props.files.map((f) => (
+            <box flexDirection="column" gap={0}>
+              <text onMouseUp={() => toggle(f.path)}>
+                <span style={{ fg: props.theme.text }}>
+                  <b>{f.path}</b>
+                </span>
+                <span style={{ fg: props.theme.textMuted }}>{`  +${f.a} -${f.d}`}</span>
+              </text>
+              <Show when={expanded().has(f.path) ? props.patches[f.path] : undefined}>
+                {(patch) => <DiffBody theme={props.theme} text={patch()} />}
+              </Show>
+            </box>
+          ))}
+        </box>
+      </Show>
+    </scrollbox>
+  )
 }
 
 function Footer(props: { api: TuiPluginApi; sessionId: string }) {
@@ -463,8 +683,8 @@ function Footer(props: { api: TuiPluginApi; sessionId: string }) {
   // `snap()` is called fresh at each JSX position below (never destructured into a plain variable
   // beforehand) — Solid only tracks a signal reactively where it's read inside a JSX child/prop
   // expression; a `const s = snap()` hoisted above the JSX would freeze at the first render.
-  const gitLine = (g: GitStatus, label: string) => (
-    <text>
+  const gitLine = (g: GitStatus, label: string, onClick?: () => void) => (
+    <text onMouseUp={onClick}>
       <span style={{ fg: gitDotColor(theme, g) }}>{"●"}</span>
       <span style={{ fg: theme.textMuted }}>{" "}</span>
       <span style={{ fg: theme.textMuted }}>{label}</span>
@@ -477,22 +697,51 @@ function Footer(props: { api: TuiPluginApi; sessionId: string }) {
     </text>
   )
 
+  const openSized = (render: () => unknown) => {
+    const cols = Number(props.api.renderer?.terminalWidth) || 120
+    props.api.ui.dialog.replace(render, () => {})
+    props.api.ui.dialog.setSize(dialogSizeFor(cols))
+  }
+
+  const dialogRows = () => usableDialogRows(Number(props.api.renderer?.terminalHeight) || 40)
+
+  // Repo dialogs shell out fresh on click rather than reusing the interval-computed snapshot —
+  // the click is the user asking "what's actually in there right now," not a cached 0-3s-old read.
+  const openRepoDialog = (repoPath: string) => {
+    const files = gitFileStats(repoPath)
+    const patches = gitDiffPatches(
+      repoPath,
+      files.map((f) => f.path),
+    )
+    openSized(() => <RepoDialogBody theme={theme} files={files} patches={patches} rows={dialogRows()} />)
+  }
+
+  const openKnowledgeDialog = () => {
+    const a = snap().activity
+    openSized(() => (
+      <KnowledgeDialogBody
+        theme={theme}
+        knowledgeDir={snap().knowledgeDir}
+        readFiles={[...a.readFiles].sort()}
+        editedFiles={[...a.editedFiles].sort()}
+        dirty={a.editedSinceReflect}
+        rows={dialogRows()}
+      />
+    ))
+  }
+
   return (
     <box flexDirection="column" gap={0}>
       <text>
         <span style={{ fg: theme.textMuted }}>{"session "}</span>
         <span style={{ fg: theme.text }}>{`+${snap().sessionIns}-${snap().sessionDel}`}</span>
       </text>
-      {snap().repos.map((r) => gitLine(r.status, r.label))}
-      <Show when={snap().knowledgeGit}>
-        {(g) => (
-          <box flexDirection="column" gap={0}>
-            <text>{" "}</text>
-            {gitLine(g(), "")}
-          </box>
-        )}
+      {snap().repos.map((r) => gitLine(r.status, r.label, () => openRepoDialog(r.path)))}
+      <text>{" "}</text>
+      <Show when={snap().knowledgeRepo}>
+        {(kr) => gitLine(kr().status, "", () => openRepoDialog(kr().path))}
       </Show>
-      <text>
+      <text onMouseUp={() => openKnowledgeDialog()}>
         <span style={{ fg: theme.text }}>{`${snap().activity.readFiles.size}`}</span>
         <span style={{ fg: theme.textMuted }}>{" ("}</span>
         <span style={{ fg: theme.text }}>
