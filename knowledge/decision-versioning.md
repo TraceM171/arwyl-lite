@@ -1,11 +1,12 @@
 # Explicit semver per plugin, bumped on every ship
 
-**Status:** ACTIVE since 2026-07-10 (extended to `opencode/package.json` 2026-09-12)
+**Status:** ACTIVE since 2026-07-10
 **Decision:** Every plugin carries an explicit `version` in its `plugin.json`, and that version is
 bumped for **any** change that should reach an install — including changes that alter nothing about
 the knowledge-tree conventions themselves. The per-marketplace auto-update toggle stays on alongside
 it. The caching mechanism this exists to work with is in `stack.md`'s "Version-bump-for-cache".
-The OpenCode package's `version` (`opencode/package.json`) follows the same bump-per-ship discipline.
+The OpenCode package's `version` (`opencode/package.json`) follows the same bump-per-ship discipline
+(owner call, 2026-09-12).
 
 ## Why (current reasoning)
 
@@ -20,9 +21,8 @@ picked up until `0.1.16` bumped for them (`status.md`).
 is left standing rather than filled with a plausible-sounding rationale — if the question is reopened,
 it is genuinely open.
 
-**Why the OpenCode package follows it is not recorded either.** The owner's call (2026-09-12, answering the
-question `decision-multi-tool-integration.md` had left open) was bump per ship; no reason was stated, and
-the Claude Code cache mechanism above is specific to Claude Code. Left standing rather than filled in.
+**No reason was recorded for the OpenCode package either.** The owner chose bump-per-ship on 2026-09-12,
+answering the question `decision-multi-tool-integration.md` had left open; that gap is left standing too.
 
 ## Rejected
 

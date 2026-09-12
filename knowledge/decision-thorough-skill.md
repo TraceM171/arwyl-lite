@@ -1,7 +1,6 @@
 # Leveled `thorough` skill for `arwyl-extras`
 
-**Status:** ACTIVE since 2026-08-31 (reaffirmed 2026-09-01 twice, and 2026-09-02 — each after a real
-`deep` run; see Deliberation)
+**Status:** ACTIVE since 2026-08-31 (reaffirmed 2026-09-01, 2026-09-02)
 **Decision:** Ship a new `thorough` skill plus a dispatched `investigator` subagent in `arwyl-extras`
 (`arwyl-extras/skills/thorough/`, `arwyl-extras/agents/investigator.md`) — not `arwyl-lite`, per the
 same no-knowledge-tree-dependency split test as `decision-plugin-split.md`. Domain-agnostic: research,

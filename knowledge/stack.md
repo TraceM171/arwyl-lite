@@ -6,7 +6,7 @@ Chosen approach for distributing and versioning Arwyl Lite, and how the moving p
 
 - **Six kinds of knowledge**: index / status / model / decision / audit / pattern (`claude_code/KNOWLEDGE_ORG.md`) — the core taxonomy the whole system is built around. Why six, and what was rejected: `decision-taxonomy-kinds.md`.
 - **Per-X convention**: one file per instance (service, integration, consumer, etc.) for any collection that would otherwise become a mega-file.
-- **`phases.md` / `<domain>/plan.md`**: reserved Status-kind files for a multi-step, multi-session plan that has outgrown `status.md`'s Open section — see `KNOWLEDGE_ORG.md`'s "Open entries are pointers, not plans".
+- **`phases.md` / `<domain>/plan.md`**: reserved names for a Status-kind file holding a multi-step, multi-session plan that has outgrown `status.md`'s Open section — the file exists only while such a plan is live, and the name is freed on completion. See `KNOWLEDGE_ORG.md`'s "Open entries are pointers, not plans".
 
 ## Distribution
 
