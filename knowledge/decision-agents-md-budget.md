@@ -1,6 +1,6 @@
 # `AGENTS.md` character budget: fixed at 9,000
 
-**Status:** ACTIVE since 2026-09-08
+**Status:** ACTIVE since 2026-09-08 (reaffirmed 2026-09-12)
 **Decision:** `claude_code/AGENTS.md` stays under a fixed **9,000-character** budget — enforced at commit
 time by `.githooks/pre-commit`, warned on in-session by `hooks/session-start.py`, the constant kept in sync
 in both (`stack.md`). The budget does not move again: a new permanent rule gets its full text in
